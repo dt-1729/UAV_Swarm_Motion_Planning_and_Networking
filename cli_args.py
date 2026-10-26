@@ -99,7 +99,7 @@ def parse_main_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "-mt",
         "--max-time",
         type=float,
-        default=200.0,
+        default=300.0,
         help="Environment episode time horizon.",
     )
     parser.add_argument(

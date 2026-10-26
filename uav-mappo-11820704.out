@@ -1,0 +1,388 @@
+Job ID: 11820704
+Node: ccc0288
+Python: /projects/illinois/eng/mechse/salapaka/dhananjay/UAV_Swarm_Motion_Planning_and_Networking/../.venv/bin/python
+Launching: /projects/illinois/eng/mechse/salapaka/dhananjay/UAV_Swarm_Motion_Planning_and_Networking/../.venv/bin/python main.py --run-mode t --checkpoint-every-updates 25 --smoothing-window 10 --show-variance --n-uavs 10 --n-sensors 50 --head-motion c
+CBF CONNECTIVITY NEIGHBOR MODE: upstream
+SENSOR INIT MODE: stratified (clusters=3)
+ENV SIZE: n_uavs=10, n_sensors=50
+CHAIN CONFIG: n_chains=2
+UAV-to-sensor range: 50.0
+UAV-to-UAV range: 100.0
+UAV-to-base station range: 200.0
+UAV-to-UAV safe distance: 20.0
+Minimum UAV height: 20.0
+Starting follower training with head motion 'cluster_tsp', rollout_steps=6000, epochs=200, minibatch_size=256, max_time=300.0...
+[train_ppo] collecting rollout 1/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 1/200 collected (steps=6000, reward_mean=0.0467)
+[train_ppo] update=1/200 rollout_reward_mean=0.0467 rollout_reward_sum=280.0000 rollout_nonzero_frac=0.0208 visited_final=0.3600 visited_ep_end_last=0.3600 policy_loss=-0.0282 value_loss=0.7034 follower_kl=0.007628
+[train_ppo] collecting rollout 2/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 2/200 collected (steps=6000, reward_mean=0.0463)
+[train_ppo] update=2/200 rollout_reward_mean=0.0463 rollout_reward_sum=277.7778 rollout_nonzero_frac=0.0205 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0289 value_loss=0.6603 follower_kl=0.007131
+[train_ppo] collecting rollout 3/200...
+[train_ppo] rollout 3/200 collected (steps=6000, reward_mean=0.0496)
+[train_ppo] update=3/200 rollout_reward_mean=0.0496 rollout_reward_sum=297.7778 rollout_nonzero_frac=0.0222 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0322 value_loss=0.6508 follower_kl=0.008906
+[train_ppo] collecting rollout 4/200...
+[train_ppo] rollout 4/200 collected (steps=6000, reward_mean=0.0459)
+[train_ppo] update=4/200 rollout_reward_mean=0.0459 rollout_reward_sum=275.5556 rollout_nonzero_frac=0.0205 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0330 value_loss=0.6171 follower_kl=0.010982
+[train_ppo] collecting rollout 5/200...
+[train_ppo] rollout 5/200 collected (steps=6000, reward_mean=0.0456)
+[train_ppo] update=5/200 rollout_reward_mean=0.0456 rollout_reward_sum=273.3333 rollout_nonzero_frac=0.0205 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0372 value_loss=0.4457 follower_kl=0.010225
+[train_ppo] collecting rollout 6/200...
+[train_ppo] rollout 6/200 collected (steps=6000, reward_mean=0.0470)
+[train_ppo] update=6/200 rollout_reward_mean=0.0470 rollout_reward_sum=282.2222 rollout_nonzero_frac=0.0210 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0385 value_loss=0.3895 follower_kl=0.011379
+[train_ppo] collecting rollout 7/200...
+[train_ppo] rollout 7/200 collected (steps=6000, reward_mean=0.0493)
+[train_ppo] update=7/200 rollout_reward_mean=0.0493 rollout_reward_sum=295.5556 rollout_nonzero_frac=0.0222 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0399 value_loss=0.3275 follower_kl=0.013318
+[train_ppo] collecting rollout 8/200...
+[train_ppo] rollout 8/200 collected (steps=6000, reward_mean=0.0459)
+[train_ppo] update=8/200 rollout_reward_mean=0.0459 rollout_reward_sum=275.5556 rollout_nonzero_frac=0.0203 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0426 value_loss=0.4334 follower_kl=0.014323
+[train_ppo] collecting rollout 9/200...
+[train_ppo] rollout 9/200 collected (steps=6000, reward_mean=0.0444)
+[train_ppo] update=9/200 rollout_reward_mean=0.0444 rollout_reward_sum=266.6667 rollout_nonzero_frac=0.0200 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0419 value_loss=0.3565 follower_kl=0.015173
+[train_ppo] collecting rollout 10/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 10/200 collected (steps=6000, reward_mean=0.0511)
+[train_ppo] update=10/200 rollout_reward_mean=0.0511 rollout_reward_sum=306.6667 rollout_nonzero_frac=0.0228 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0429 value_loss=0.2549 follower_kl=0.019474
+[train_ppo] collecting rollout 11/200...
+[train_ppo] rollout 11/200 collected (steps=6000, reward_mean=0.0485)
+[train_ppo] update=11/200 rollout_reward_mean=0.0485 rollout_reward_sum=291.1111 rollout_nonzero_frac=0.0217 visited_final=0.1800 visited_ep_end_last=0.1800 policy_loss=-0.0475 value_loss=0.2463 follower_kl=0.021290
+[train_ppo] collecting rollout 12/200...
+[train_ppo] rollout 12/200 collected (steps=6000, reward_mean=0.0467)
+[train_ppo] update=12/200 rollout_reward_mean=0.0467 rollout_reward_sum=280.0000 rollout_nonzero_frac=0.0208 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0479 value_loss=0.2657 follower_kl=0.017218
+[train_ppo] collecting rollout 13/200...
+[swarm_env] connectivity filter did not converge (More than 3*n iterations in LSQ subproblem); using fallback directions
+[train_ppo] rollout 13/200 collected (steps=6000, reward_mean=0.0478)
+[train_ppo] update=13/200 rollout_reward_mean=0.0478 rollout_reward_sum=286.6667 rollout_nonzero_frac=0.0213 visited_final=0.0800 visited_ep_end_last=0.0800 policy_loss=-0.0469 value_loss=0.2248 follower_kl=0.019533
+[train_ppo] collecting rollout 14/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 14/200 collected (steps=6000, reward_mean=0.0448)
+[train_ppo] update=14/200 rollout_reward_mean=0.0448 rollout_reward_sum=268.8889 rollout_nonzero_frac=0.0198 visited_final=0.1000 visited_ep_end_last=0.1000 policy_loss=-0.0495 value_loss=0.2899 follower_kl=0.027712
+[train_ppo] collecting rollout 15/200...
+[train_ppo] rollout 15/200 collected (steps=6000, reward_mean=0.0481)
+[train_ppo] update=15/200 rollout_reward_mean=0.0481 rollout_reward_sum=288.8889 rollout_nonzero_frac=0.0213 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0479 value_loss=0.2757 follower_kl=0.024578
+[train_ppo] collecting rollout 16/200...
+[train_ppo] rollout 16/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=16/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0220 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0508 value_loss=0.2120 follower_kl=0.026329
+[train_ppo] collecting rollout 17/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 17/200 collected (steps=6000, reward_mean=0.0481)
+[train_ppo] update=17/200 rollout_reward_mean=0.0481 rollout_reward_sum=288.8889 rollout_nonzero_frac=0.0213 visited_final=0.3400 visited_ep_end_last=0.3400 policy_loss=-0.0543 value_loss=0.2070 follower_kl=0.026881
+[train_ppo] collecting rollout 18/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 18/200 collected (steps=6000, reward_mean=0.0493)
+[train_ppo] update=18/200 rollout_reward_mean=0.0493 rollout_reward_sum=295.5556 rollout_nonzero_frac=0.0220 visited_final=0.1600 visited_ep_end_last=0.1600 policy_loss=-0.0533 value_loss=0.2189 follower_kl=0.032279
+[train_ppo] collecting rollout 19/200...
+[train_ppo] rollout 19/200 collected (steps=6000, reward_mean=0.0430)
+[train_ppo] update=19/200 rollout_reward_mean=0.0430 rollout_reward_sum=257.7778 rollout_nonzero_frac=0.0193 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0541 value_loss=0.2001 follower_kl=0.031511
+[train_ppo] collecting rollout 20/200...
+[train_ppo] rollout 20/200 collected (steps=6000, reward_mean=0.0485)
+[train_ppo] update=20/200 rollout_reward_mean=0.0485 rollout_reward_sum=291.1111 rollout_nonzero_frac=0.0218 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0527 value_loss=0.1750 follower_kl=0.033053
+[train_ppo] collecting rollout 21/200...
+[train_ppo] rollout 21/200 collected (steps=6000, reward_mean=0.0481)
+[train_ppo] update=21/200 rollout_reward_mean=0.0481 rollout_reward_sum=288.8889 rollout_nonzero_frac=0.0215 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0517 value_loss=0.1879 follower_kl=0.034680
+[train_ppo] collecting rollout 22/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 22/200 collected (steps=6000, reward_mean=0.0415)
+[train_ppo] update=22/200 rollout_reward_mean=0.0415 rollout_reward_sum=248.8889 rollout_nonzero_frac=0.0183 visited_final=0.2000 visited_ep_end_last=0.2000 policy_loss=-0.0580 value_loss=0.1848 follower_kl=0.039460
+[train_ppo] collecting rollout 23/200...
+[train_ppo] rollout 23/200 collected (steps=6000, reward_mean=0.0456)
+[train_ppo] update=23/200 rollout_reward_mean=0.0456 rollout_reward_sum=273.3333 rollout_nonzero_frac=0.0203 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0592 value_loss=0.2086 follower_kl=0.037532
+[train_ppo] collecting rollout 24/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 24/200 collected (steps=6000, reward_mean=0.0437)
+[train_ppo] update=24/200 rollout_reward_mean=0.0437 rollout_reward_sum=262.2222 rollout_nonzero_frac=0.0197 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0587 value_loss=0.2143 follower_kl=0.035809
+[train_ppo] collecting rollout 25/200...
+[train_ppo] rollout 25/200 collected (steps=6000, reward_mean=0.0478)
+[checkpoint] saved update=25 path=training_results/n_sensors_50_n_uavs_10_20261025_230732/checkpoints/model_update_000025.pt
+[train_ppo] update=25/200 rollout_reward_mean=0.0478 rollout_reward_sum=286.6667 rollout_nonzero_frac=0.0213 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0582 value_loss=0.2073 follower_kl=0.028162
+[train_ppo] collecting rollout 26/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 26/200 collected (steps=6000, reward_mean=0.0441)
+[train_ppo] update=26/200 rollout_reward_mean=0.0441 rollout_reward_sum=264.4445 rollout_nonzero_frac=0.0197 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0620 value_loss=0.1661 follower_kl=0.029051
+[train_ppo] collecting rollout 27/200...
+[train_ppo] rollout 27/200 collected (steps=6000, reward_mean=0.0478)
+[train_ppo] update=27/200 rollout_reward_mean=0.0478 rollout_reward_sum=286.6667 rollout_nonzero_frac=0.0212 visited_final=0.1600 visited_ep_end_last=0.1600 policy_loss=-0.0631 value_loss=0.2110 follower_kl=0.038605
+[train_ppo] collecting rollout 28/200...
+[train_ppo] rollout 28/200 collected (steps=6000, reward_mean=0.0507)
+[train_ppo] update=28/200 rollout_reward_mean=0.0507 rollout_reward_sum=304.4445 rollout_nonzero_frac=0.0225 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0588 value_loss=0.1827 follower_kl=0.042669
+[train_ppo] collecting rollout 29/200...
+[train_ppo] rollout 29/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=29/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0217 visited_final=0.3400 visited_ep_end_last=0.3400 policy_loss=-0.0606 value_loss=0.2073 follower_kl=0.031063
+[train_ppo] collecting rollout 30/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 30/200 collected (steps=6000, reward_mean=0.0470)
+[train_ppo] update=30/200 rollout_reward_mean=0.0470 rollout_reward_sum=282.2222 rollout_nonzero_frac=0.0208 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0546 value_loss=0.2391 follower_kl=0.044951
+[train_ppo] collecting rollout 31/200...
+[train_ppo] rollout 31/200 collected (steps=6000, reward_mean=0.0481)
+[train_ppo] update=31/200 rollout_reward_mean=0.0481 rollout_reward_sum=288.8889 rollout_nonzero_frac=0.0215 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0605 value_loss=0.1689 follower_kl=0.039034
+[train_ppo] collecting rollout 32/200...
+[train_ppo] rollout 32/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=32/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0217 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0623 value_loss=0.2647 follower_kl=0.049262
+[train_ppo] collecting rollout 33/200...
+[train_ppo] rollout 33/200 collected (steps=6000, reward_mean=0.0474)
+[train_ppo] update=33/200 rollout_reward_mean=0.0474 rollout_reward_sum=284.4445 rollout_nonzero_frac=0.0212 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0651 value_loss=0.1603 follower_kl=0.056815
+[train_ppo] collecting rollout 34/200...
+[train_ppo] rollout 34/200 collected (steps=6000, reward_mean=0.0459)
+[train_ppo] update=34/200 rollout_reward_mean=0.0459 rollout_reward_sum=275.5556 rollout_nonzero_frac=0.0200 visited_final=0.2000 visited_ep_end_last=0.2000 policy_loss=-0.0568 value_loss=0.1509 follower_kl=0.044532
+[train_ppo] collecting rollout 35/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 35/200 collected (steps=6000, reward_mean=0.0467)
+[train_ppo] update=35/200 rollout_reward_mean=0.0467 rollout_reward_sum=280.0000 rollout_nonzero_frac=0.0208 visited_final=0.1400 visited_ep_end_last=0.1400 policy_loss=-0.0600 value_loss=0.1489 follower_kl=0.052616
+[train_ppo] collecting rollout 36/200...
+[train_ppo] rollout 36/200 collected (steps=6000, reward_mean=0.0452)
+[train_ppo] update=36/200 rollout_reward_mean=0.0452 rollout_reward_sum=271.1111 rollout_nonzero_frac=0.0200 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0582 value_loss=0.2236 follower_kl=0.047253
+[train_ppo] collecting rollout 37/200...
+[train_ppo] rollout 37/200 collected (steps=6000, reward_mean=0.0444)
+[train_ppo] update=37/200 rollout_reward_mean=0.0444 rollout_reward_sum=266.6667 rollout_nonzero_frac=0.0195 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0637 value_loss=0.1451 follower_kl=0.054107
+[train_ppo] collecting rollout 38/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 38/200 collected (steps=6000, reward_mean=0.0452)
+[train_ppo] update=38/200 rollout_reward_mean=0.0452 rollout_reward_sum=271.1111 rollout_nonzero_frac=0.0202 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0584 value_loss=0.1569 follower_kl=0.050426
+[train_ppo] collecting rollout 39/200...
+[train_ppo] rollout 39/200 collected (steps=6000, reward_mean=0.0493)
+[train_ppo] update=39/200 rollout_reward_mean=0.0493 rollout_reward_sum=295.5556 rollout_nonzero_frac=0.0218 visited_final=0.3400 visited_ep_end_last=0.3400 policy_loss=-0.0620 value_loss=0.1685 follower_kl=0.061637
+[train_ppo] collecting rollout 40/200...
+[train_ppo] rollout 40/200 collected (steps=6000, reward_mean=0.0459)
+[train_ppo] update=40/200 rollout_reward_mean=0.0459 rollout_reward_sum=275.5556 rollout_nonzero_frac=0.0205 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0660 value_loss=0.1430 follower_kl=0.057820
+[train_ppo] collecting rollout 41/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 41/200 collected (steps=6000, reward_mean=0.0493)
+[train_ppo] update=41/200 rollout_reward_mean=0.0493 rollout_reward_sum=295.5556 rollout_nonzero_frac=0.0220 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0631 value_loss=0.1631 follower_kl=0.074831
+[train_ppo] collecting rollout 42/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 42/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=42/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0218 visited_final=0.1600 visited_ep_end_last=0.1600 policy_loss=-0.0536 value_loss=0.2878 follower_kl=0.073164
+[train_ppo] collecting rollout 43/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 43/200 collected (steps=6000, reward_mean=0.0456)
+[train_ppo] update=43/200 rollout_reward_mean=0.0456 rollout_reward_sum=273.3333 rollout_nonzero_frac=0.0203 visited_final=0.2000 visited_ep_end_last=0.2000 policy_loss=-0.0616 value_loss=0.1520 follower_kl=0.071530
+[train_ppo] collecting rollout 44/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 44/200 collected (steps=6000, reward_mean=0.0511)
+[train_ppo] update=44/200 rollout_reward_mean=0.0511 rollout_reward_sum=306.6667 rollout_nonzero_frac=0.0225 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0634 value_loss=0.1556 follower_kl=0.075352
+[train_ppo] collecting rollout 45/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 45/200 collected (steps=6000, reward_mean=0.0496)
+[train_ppo] update=45/200 rollout_reward_mean=0.0496 rollout_reward_sum=297.7778 rollout_nonzero_frac=0.0218 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0531 value_loss=0.1462 follower_kl=0.069986
+[train_ppo] collecting rollout 46/200...
+[train_ppo] rollout 46/200 collected (steps=6000, reward_mean=0.0511)
+[train_ppo] update=46/200 rollout_reward_mean=0.0511 rollout_reward_sum=306.6667 rollout_nonzero_frac=0.0230 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0558 value_loss=0.1310 follower_kl=0.077005
+[train_ppo] collecting rollout 47/200...
+[train_ppo] rollout 47/200 collected (steps=6000, reward_mean=0.0467)
+[train_ppo] update=47/200 rollout_reward_mean=0.0467 rollout_reward_sum=280.0000 rollout_nonzero_frac=0.0208 visited_final=0.1800 visited_ep_end_last=0.1800 policy_loss=-0.0530 value_loss=0.1358 follower_kl=0.119835
+[train_ppo] collecting rollout 48/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 48/200 collected (steps=6000, reward_mean=0.0485)
+[train_ppo] update=48/200 rollout_reward_mean=0.0485 rollout_reward_sum=291.1111 rollout_nonzero_frac=0.0215 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0586 value_loss=0.1696 follower_kl=0.076021
+[train_ppo] collecting rollout 49/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 49/200 collected (steps=6000, reward_mean=0.0485)
+[train_ppo] update=49/200 rollout_reward_mean=0.0485 rollout_reward_sum=291.1111 rollout_nonzero_frac=0.0215 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0578 value_loss=0.1752 follower_kl=0.071519
+[train_ppo] collecting rollout 50/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 50/200 collected (steps=6000, reward_mean=0.0489)
+[checkpoint] saved update=50 path=training_results/n_sensors_50_n_uavs_10_20261025_230732/checkpoints/model_update_000050.pt
+[train_ppo] update=50/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0217 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0569 value_loss=0.1499 follower_kl=0.079996
+[train_ppo] collecting rollout 51/200...
+[train_ppo] rollout 51/200 collected (steps=6000, reward_mean=0.0467)
+[train_ppo] update=51/200 rollout_reward_mean=0.0467 rollout_reward_sum=280.0000 rollout_nonzero_frac=0.0208 visited_final=0.2000 visited_ep_end_last=0.2000 policy_loss=-0.0464 value_loss=0.1735 follower_kl=0.125819
+[train_ppo] collecting rollout 52/200...
+[train_ppo] rollout 52/200 collected (steps=6000, reward_mean=0.0481)
+[train_ppo] update=52/200 rollout_reward_mean=0.0481 rollout_reward_sum=288.8889 rollout_nonzero_frac=0.0217 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0593 value_loss=0.1445 follower_kl=0.101022
+[train_ppo] collecting rollout 53/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 53/200 collected (steps=6000, reward_mean=0.0478)
+[train_ppo] update=53/200 rollout_reward_mean=0.0478 rollout_reward_sum=286.6667 rollout_nonzero_frac=0.0212 visited_final=0.2000 visited_ep_end_last=0.2000 policy_loss=-0.0547 value_loss=0.2124 follower_kl=0.114485
+[train_ppo] collecting rollout 54/200...
+[train_ppo] rollout 54/200 collected (steps=6000, reward_mean=0.0474)
+[train_ppo] update=54/200 rollout_reward_mean=0.0474 rollout_reward_sum=284.4445 rollout_nonzero_frac=0.0213 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0521 value_loss=0.1347 follower_kl=0.116134
+[train_ppo] collecting rollout 55/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 55/200 collected (steps=6000, reward_mean=0.0419)
+[train_ppo] update=55/200 rollout_reward_mean=0.0419 rollout_reward_sum=251.1111 rollout_nonzero_frac=0.0188 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0533 value_loss=0.1825 follower_kl=0.096575
+[train_ppo] collecting rollout 56/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 56/200 collected (steps=6000, reward_mean=0.0463)
+[train_ppo] update=56/200 rollout_reward_mean=0.0463 rollout_reward_sum=277.7778 rollout_nonzero_frac=0.0207 visited_final=0.3400 visited_ep_end_last=0.3400 policy_loss=-0.0600 value_loss=0.1387 follower_kl=0.094421
+[train_ppo] collecting rollout 57/200...
+[train_ppo] rollout 57/200 collected (steps=6000, reward_mean=0.0485)
+[train_ppo] update=57/200 rollout_reward_mean=0.0485 rollout_reward_sum=291.1111 rollout_nonzero_frac=0.0210 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0503 value_loss=0.1419 follower_kl=0.127173
+[train_ppo] collecting rollout 58/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 58/200 collected (steps=6000, reward_mean=0.0493)
+[train_ppo] update=58/200 rollout_reward_mean=0.0493 rollout_reward_sum=295.5556 rollout_nonzero_frac=0.0218 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0575 value_loss=0.1343 follower_kl=0.085168
+[train_ppo] collecting rollout 59/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 59/200 collected (steps=6000, reward_mean=0.0459)
+[train_ppo] update=59/200 rollout_reward_mean=0.0459 rollout_reward_sum=275.5556 rollout_nonzero_frac=0.0203 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0580 value_loss=0.1771 follower_kl=0.115313
+[train_ppo] collecting rollout 60/200...
+[train_ppo] rollout 60/200 collected (steps=6000, reward_mean=0.0511)
+[train_ppo] update=60/200 rollout_reward_mean=0.0511 rollout_reward_sum=306.6667 rollout_nonzero_frac=0.0228 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0569 value_loss=0.1787 follower_kl=0.116256
+[train_ppo] collecting rollout 61/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 61/200 collected (steps=6000, reward_mean=0.0481)
+[train_ppo] update=61/200 rollout_reward_mean=0.0481 rollout_reward_sum=288.8889 rollout_nonzero_frac=0.0215 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0580 value_loss=0.1108 follower_kl=0.111724
+[train_ppo] collecting rollout 62/200...
+[train_ppo] rollout 62/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=62/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0217 visited_final=0.3600 visited_ep_end_last=0.3600 policy_loss=-0.0575 value_loss=0.1250 follower_kl=0.097336
+[train_ppo] collecting rollout 63/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 63/200 collected (steps=6000, reward_mean=0.0444)
+[train_ppo] update=63/200 rollout_reward_mean=0.0444 rollout_reward_sum=266.6667 rollout_nonzero_frac=0.0200 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0626 value_loss=0.1095 follower_kl=0.102259
+[train_ppo] collecting rollout 64/200...
+[train_ppo] rollout 64/200 collected (steps=6000, reward_mean=0.0437)
+[train_ppo] update=64/200 rollout_reward_mean=0.0437 rollout_reward_sum=262.2222 rollout_nonzero_frac=0.0195 visited_final=0.1600 visited_ep_end_last=0.1600 policy_loss=-0.0533 value_loss=0.1057 follower_kl=0.114059
+[train_ppo] collecting rollout 65/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 65/200 collected (steps=6000, reward_mean=0.0526)
+[train_ppo] update=65/200 rollout_reward_mean=0.0526 rollout_reward_sum=315.5556 rollout_nonzero_frac=0.0233 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0556 value_loss=0.1394 follower_kl=0.098699
+[train_ppo] collecting rollout 66/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 66/200 collected (steps=6000, reward_mean=0.0474)
+[train_ppo] update=66/200 rollout_reward_mean=0.0474 rollout_reward_sum=284.4445 rollout_nonzero_frac=0.0210 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0509 value_loss=0.1250 follower_kl=0.111938
+[train_ppo] collecting rollout 67/200...
+[train_ppo] rollout 67/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=67/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0220 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0607 value_loss=0.1049 follower_kl=0.090500
+[train_ppo] collecting rollout 68/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 68/200 collected (steps=6000, reward_mean=0.0526)
+[train_ppo] update=68/200 rollout_reward_mean=0.0526 rollout_reward_sum=315.5556 rollout_nonzero_frac=0.0237 visited_final=0.3800 visited_ep_end_last=0.3800 policy_loss=-0.0599 value_loss=0.1234 follower_kl=0.097603
+[train_ppo] collecting rollout 69/200...
+[train_ppo] rollout 69/200 collected (steps=6000, reward_mean=0.0504)
+[train_ppo] update=69/200 rollout_reward_mean=0.0504 rollout_reward_sum=302.2222 rollout_nonzero_frac=0.0225 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0543 value_loss=0.1132 follower_kl=0.125036
+[train_ppo] collecting rollout 70/200...
+[train_ppo] rollout 70/200 collected (steps=6000, reward_mean=0.0519)
+[train_ppo] update=70/200 rollout_reward_mean=0.0519 rollout_reward_sum=311.1111 rollout_nonzero_frac=0.0230 visited_final=0.3600 visited_ep_end_last=0.3600 policy_loss=-0.0519 value_loss=0.1336 follower_kl=0.095901
+[train_ppo] collecting rollout 71/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 71/200 collected (steps=6000, reward_mean=0.0433)
+[train_ppo] update=71/200 rollout_reward_mean=0.0433 rollout_reward_sum=260.0000 rollout_nonzero_frac=0.0193 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0537 value_loss=0.1061 follower_kl=0.101617
+[train_ppo] collecting rollout 72/200...
+[train_ppo] rollout 72/200 collected (steps=6000, reward_mean=0.0530)
+[train_ppo] update=72/200 rollout_reward_mean=0.0530 rollout_reward_sum=317.7778 rollout_nonzero_frac=0.0233 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0513 value_loss=0.1464 follower_kl=0.129957
+[train_ppo] collecting rollout 73/200...
+[train_ppo] rollout 73/200 collected (steps=6000, reward_mean=0.0500)
+[train_ppo] update=73/200 rollout_reward_mean=0.0500 rollout_reward_sum=300.0000 rollout_nonzero_frac=0.0220 visited_final=0.3200 visited_ep_end_last=0.3200 policy_loss=-0.0520 value_loss=0.1201 follower_kl=0.111630
+[train_ppo] collecting rollout 74/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 74/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=74/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0217 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0481 value_loss=0.0927 follower_kl=0.152217
+[train_ppo] collecting rollout 75/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 75/200 collected (steps=6000, reward_mean=0.0478)
+[checkpoint] saved update=75 path=training_results/n_sensors_50_n_uavs_10_20261025_230732/checkpoints/model_update_000075.pt
+[train_ppo] update=75/200 rollout_reward_mean=0.0478 rollout_reward_sum=286.6667 rollout_nonzero_frac=0.0215 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0609 value_loss=0.1059 follower_kl=0.110258
+[train_ppo] collecting rollout 76/200...
+[train_ppo] rollout 76/200 collected (steps=6000, reward_mean=0.0456)
+[train_ppo] update=76/200 rollout_reward_mean=0.0456 rollout_reward_sum=273.3333 rollout_nonzero_frac=0.0203 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0571 value_loss=0.1353 follower_kl=0.127473
+[train_ppo] collecting rollout 77/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 77/200 collected (steps=6000, reward_mean=0.0522)
+[train_ppo] update=77/200 rollout_reward_mean=0.0522 rollout_reward_sum=313.3333 rollout_nonzero_frac=0.0232 visited_final=0.2400 visited_ep_end_last=0.2400 policy_loss=-0.0502 value_loss=0.1386 follower_kl=0.122780
+[train_ppo] collecting rollout 78/200...
+[train_ppo] rollout 78/200 collected (steps=6000, reward_mean=0.0493)
+[train_ppo] update=78/200 rollout_reward_mean=0.0493 rollout_reward_sum=295.5556 rollout_nonzero_frac=0.0222 visited_final=0.1600 visited_ep_end_last=0.1600 policy_loss=-0.0600 value_loss=0.1116 follower_kl=0.114295
+[train_ppo] collecting rollout 79/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 79/200 collected (steps=6000, reward_mean=0.0470)
+[train_ppo] update=79/200 rollout_reward_mean=0.0470 rollout_reward_sum=282.2222 rollout_nonzero_frac=0.0208 visited_final=0.1600 visited_ep_end_last=0.1600 policy_loss=-0.0512 value_loss=0.1643 follower_kl=0.117142
+[train_ppo] collecting rollout 80/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 80/200 collected (steps=6000, reward_mean=0.0522)
+[train_ppo] update=80/200 rollout_reward_mean=0.0522 rollout_reward_sum=313.3333 rollout_nonzero_frac=0.0235 visited_final=0.3200 visited_ep_end_last=0.3200 policy_loss=-0.0563 value_loss=0.1105 follower_kl=0.137248
+[train_ppo] collecting rollout 81/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 81/200 collected (steps=6000, reward_mean=0.0452)
+[train_ppo] update=81/200 rollout_reward_mean=0.0452 rollout_reward_sum=271.1111 rollout_nonzero_frac=0.0202 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0504 value_loss=0.1091 follower_kl=0.133408
+[train_ppo] collecting rollout 82/200...
+[train_ppo] rollout 82/200 collected (steps=6000, reward_mean=0.0481)
+[train_ppo] update=82/200 rollout_reward_mean=0.0481 rollout_reward_sum=288.8889 rollout_nonzero_frac=0.0217 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0527 value_loss=0.0928 follower_kl=0.153049
+[train_ppo] collecting rollout 83/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 83/200 collected (steps=6000, reward_mean=0.0507)
+[train_ppo] update=83/200 rollout_reward_mean=0.0507 rollout_reward_sum=304.4445 rollout_nonzero_frac=0.0225 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0479 value_loss=0.0969 follower_kl=0.157726
+[train_ppo] collecting rollout 84/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 84/200 collected (steps=6000, reward_mean=0.0519)
+[train_ppo] update=84/200 rollout_reward_mean=0.0519 rollout_reward_sum=311.1111 rollout_nonzero_frac=0.0232 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0515 value_loss=0.1172 follower_kl=0.125916
+[train_ppo] collecting rollout 85/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 85/200 collected (steps=6000, reward_mean=0.0530)
+[train_ppo] update=85/200 rollout_reward_mean=0.0530 rollout_reward_sum=317.7778 rollout_nonzero_frac=0.0235 visited_final=0.3200 visited_ep_end_last=0.3200 policy_loss=-0.0518 value_loss=0.1144 follower_kl=0.129976
+[train_ppo] collecting rollout 86/200...
+[train_ppo] rollout 86/200 collected (steps=6000, reward_mean=0.0463)
+[train_ppo] update=86/200 rollout_reward_mean=0.0463 rollout_reward_sum=277.7778 rollout_nonzero_frac=0.0207 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0556 value_loss=0.1081 follower_kl=0.117006
+[train_ppo] collecting rollout 87/200...
+[swarm_env] connectivity filter did not converge (More than 3*n iterations in LSQ subproblem); using fallback directions
+[train_ppo] rollout 87/200 collected (steps=6000, reward_mean=0.0496)
+[train_ppo] update=87/200 rollout_reward_mean=0.0496 rollout_reward_sum=297.7778 rollout_nonzero_frac=0.0215 visited_final=0.2000 visited_ep_end_last=0.2000 policy_loss=-0.0390 value_loss=0.0962 follower_kl=0.170844
+[train_ppo] collecting rollout 88/200...
+[train_ppo] rollout 88/200 collected (steps=6000, reward_mean=0.0500)
+[train_ppo] update=88/200 rollout_reward_mean=0.0500 rollout_reward_sum=300.0000 rollout_nonzero_frac=0.0225 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0505 value_loss=0.0999 follower_kl=0.148450
+[train_ppo] collecting rollout 89/200...
+[train_ppo] rollout 89/200 collected (steps=6000, reward_mean=0.0522)
+[train_ppo] update=89/200 rollout_reward_mean=0.0522 rollout_reward_sum=313.3333 rollout_nonzero_frac=0.0233 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0458 value_loss=0.1060 follower_kl=0.154043
+[train_ppo] collecting rollout 90/200...
+[train_ppo] rollout 90/200 collected (steps=6000, reward_mean=0.0459)
+[train_ppo] update=90/200 rollout_reward_mean=0.0459 rollout_reward_sum=275.5556 rollout_nonzero_frac=0.0202 visited_final=0.2000 visited_ep_end_last=0.2000 policy_loss=-0.0539 value_loss=0.0881 follower_kl=0.146188
+[train_ppo] collecting rollout 91/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 91/200 collected (steps=6000, reward_mean=0.0526)
+[train_ppo] update=91/200 rollout_reward_mean=0.0526 rollout_reward_sum=315.5556 rollout_nonzero_frac=0.0235 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0529 value_loss=0.0986 follower_kl=0.154820
+[train_ppo] collecting rollout 92/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 92/200 collected (steps=6000, reward_mean=0.0489)
+[train_ppo] update=92/200 rollout_reward_mean=0.0489 rollout_reward_sum=293.3333 rollout_nonzero_frac=0.0217 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0516 value_loss=0.1125 follower_kl=0.126141
+[train_ppo] collecting rollout 93/200...
+[train_ppo] rollout 93/200 collected (steps=6000, reward_mean=0.0530)
+[train_ppo] update=93/200 rollout_reward_mean=0.0530 rollout_reward_sum=317.7778 rollout_nonzero_frac=0.0237 visited_final=0.4000 visited_ep_end_last=0.4000 policy_loss=-0.0545 value_loss=0.1197 follower_kl=0.129733
+[train_ppo] collecting rollout 94/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 94/200 collected (steps=6000, reward_mean=0.0470)
+[train_ppo] update=94/200 rollout_reward_mean=0.0470 rollout_reward_sum=282.2222 rollout_nonzero_frac=0.0212 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0555 value_loss=0.0853 follower_kl=0.147695
+[train_ppo] collecting rollout 95/200...
+[train_ppo] rollout 95/200 collected (steps=6000, reward_mean=0.0496)
+[train_ppo] update=95/200 rollout_reward_mean=0.0496 rollout_reward_sum=297.7778 rollout_nonzero_frac=0.0218 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0502 value_loss=0.1138 follower_kl=0.164228
+[train_ppo] collecting rollout 96/200...
+[train_ppo] rollout 96/200 collected (steps=6000, reward_mean=0.0511)
+[train_ppo] update=96/200 rollout_reward_mean=0.0511 rollout_reward_sum=306.6667 rollout_nonzero_frac=0.0227 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0473 value_loss=0.1011 follower_kl=0.177895
+[train_ppo] collecting rollout 97/200...
+[train_ppo] rollout 97/200 collected (steps=6000, reward_mean=0.0504)
+[train_ppo] update=97/200 rollout_reward_mean=0.0504 rollout_reward_sum=302.2222 rollout_nonzero_frac=0.0225 visited_final=0.2600 visited_ep_end_last=0.2600 policy_loss=-0.0578 value_loss=0.0891 follower_kl=0.145612
+[train_ppo] collecting rollout 98/200...
+[train_ppo] rollout 98/200 collected (steps=6000, reward_mean=0.0515)
+[train_ppo] update=98/200 rollout_reward_mean=0.0515 rollout_reward_sum=308.8889 rollout_nonzero_frac=0.0228 visited_final=0.2800 visited_ep_end_last=0.2800 policy_loss=-0.0575 value_loss=0.1062 follower_kl=0.160013
+[train_ppo] collecting rollout 99/200...
+[train_ppo] rollout 99/200 collected (steps=6000, reward_mean=0.0441)
+[train_ppo] update=99/200 rollout_reward_mean=0.0441 rollout_reward_sum=264.4445 rollout_nonzero_frac=0.0195 visited_final=0.2200 visited_ep_end_last=0.2200 policy_loss=-0.0564 value_loss=0.0818 follower_kl=0.161433
+[train_ppo] collecting rollout 100/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 100/200 collected (steps=6000, reward_mean=0.0522)
+[checkpoint] saved update=100 path=training_results/n_sensors_50_n_uavs_10_20261025_230732/checkpoints/model_update_000100.pt
+[train_ppo] update=100/200 rollout_reward_mean=0.0522 rollout_reward_sum=313.3333 rollout_nonzero_frac=0.0235 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0573 value_loss=0.0830 follower_kl=0.136218
+[train_ppo] collecting rollout 101/200...
+[train_ppo] rollout 101/200 collected (steps=6000, reward_mean=0.0519)
+[train_ppo] update=101/200 rollout_reward_mean=0.0519 rollout_reward_sum=311.1111 rollout_nonzero_frac=0.0230 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0537 value_loss=0.1064 follower_kl=0.153389
+[train_ppo] collecting rollout 102/200...
+[swarm_env] connectivity filter did not converge (Iteration limit reached); using fallback directions
+[train_ppo] rollout 102/200 collected (steps=6000, reward_mean=0.0544)
+[train_ppo] update=102/200 rollout_reward_mean=0.0544 rollout_reward_sum=326.6667 rollout_nonzero_frac=0.0242 visited_final=0.3000 visited_ep_end_last=0.3000 policy_loss=-0.0555 value_loss=0.0963 follower_kl=0.128853
+[train_ppo] collecting rollout 103/200...
