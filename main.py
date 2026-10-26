@@ -113,7 +113,7 @@ if run_mode == "sim":
     print("Simulating the swarm...")
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     rollout_dir = Path("rollout_visualizations") / (
-        f"sim_n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}_{run_stamp}"
+        f"sim_n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}_head_{args.head_motion}_{run_stamp}"
     )
     rollout_dir.mkdir(parents=True, exist_ok=True)
 
@@ -181,7 +181,7 @@ elif run_mode == "train":
             raise FileNotFoundError(f"Finetune checkpoint not found: {finetune_path}")
         load_checkpoint(trainer, finetune_path)
         print(f"Loaded weights from checkpoint: {finetune_path}")
-    run_dir = build_results_run_dir(env)
+    run_dir = build_results_run_dir(env, head_motion=args.head_motion)
     tb_dir = run_dir / "tensorboard"
     live_training_csv_path = run_dir / "training.csv"
     if live_training_csv_path.exists():
@@ -269,7 +269,7 @@ elif run_mode == "eval":
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     eval_dir = Path("rollout_visualizations") / (
         f"eval_{model_folder_name}_{checkpoint_name}_"
-        f"n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}_{run_stamp}"
+        f"n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}_head_{args.head_motion}_{run_stamp}"
     )
     eval_dir.mkdir(parents=True, exist_ok=True)
 

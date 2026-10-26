@@ -49,6 +49,21 @@ export OPENBLAS_NUM_THREADS="${SLURM_CPUS_PER_TASK}"
 export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK}"
 export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK}"
 
+# main.py writes the training run directory here; on exit the Slurm logs are moved into it.
+export RUN_DIR_FILE="$SLURM_SUBMIT_DIR/.run_dir-${SLURM_JOB_ID:-local}"
+move_slurm_logs() {
+    if [[ -s "$RUN_DIR_FILE" ]]; then
+        local run_dir
+        run_dir="$(<"$RUN_DIR_FILE")"
+        for ext in out err; do
+            local log="$SLURM_SUBMIT_DIR/${SLURM_JOB_NAME}-${SLURM_JOB_ID}.$ext"
+            [[ -f "$log" ]] && mv "$log" "$run_dir/"
+        done
+    fi
+    rm -f "$RUN_DIR_FILE"
+}
+trap move_slurm_logs EXIT
+
 CMD=(
     "$PYTHON_BIN" main.py
     --run-mode "$RUN_MODE"

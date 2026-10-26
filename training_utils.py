@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 import numbers
+import os
 import sys
 from typing import Any, Callable, Dict, Optional, Tuple
 
@@ -26,11 +27,17 @@ def format_float_tag(value: float, precision: int = 3) -> str:
 def build_results_run_dir(
     env: Any,
     root_dir: str = "training_results",
+    head_motion: Optional[str] = None,
 ) -> Path:
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_name = f"n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}_{run_stamp}"
+    head_tag = f"_head_{head_motion}" if head_motion else ""
+    run_name = f"n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}{head_tag}_{run_stamp}"
     run_dir = Path(root_dir) / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
+    # Lets the cluster job script move Slurm logs into the run directory.
+    run_dir_file = os.environ.get("RUN_DIR_FILE")
+    if run_dir_file:
+        Path(run_dir_file).write_text(str(run_dir.resolve()) + "\n")
     return run_dir
 
 
