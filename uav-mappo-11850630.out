@@ -1,0 +1,4 @@
+Job ID: 11850630
+Node: ccc0354
+Python: /projects/illinois/eng/mechse/salapaka/dhananjay/UAV_Swarm_Motion_Planning_and_Networking/../.venv/bin/python
+Launching: /projects/illinois/eng/mechse/salapaka/dhananjay/UAV_Swarm_Motion_Planning_and_Networking/../.venv/bin/python main.py --run-mode t --checkpoint-every-updates 25 --smoothing-window 10 --show-variance --n-uavs 10 --n-sensors 50 --head-motion s

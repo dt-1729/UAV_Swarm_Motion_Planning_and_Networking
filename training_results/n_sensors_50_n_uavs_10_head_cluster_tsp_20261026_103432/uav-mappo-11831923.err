@@ -1,0 +1,4 @@
+srun: Job step aborted: Waiting up to 92 seconds for job step to finish.
+[2026-10-26T23:49:30.009] error: *** STEP 11831923.0 ON ccc0289 CANCELLED AT 2026-10-26T23:49:30 DUE to SIGNAL Terminated ***
+[2026-10-26T23:49:30.009] error: *** JOB 11831923 ON ccc0289 CANCELLED AT 2026-10-26T23:49:30 DUE to SIGNAL Terminated ***
+srun: error: ccc0289: task 0: Terminated
