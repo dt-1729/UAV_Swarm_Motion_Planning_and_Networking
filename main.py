@@ -68,7 +68,7 @@ env = se.UAVSwarmEnv3D(
         "u2b_range": 20.0,
         "u2s_visibility_range": 100.0,
     },
-    simulation_params={"init_time": 0.0, "dt": 0.5, "max_time": max_time, "max_energy": 1.0e5},
+    simulation_params={"init_time": 0.0, "dt": 0.1, "max_time": max_time, "max_energy": 1.0e5},
     reward_params={
         "sensor_collect_coeff": 1000.0*np.ones(n_uavs, dtype=np.float32),
         "potential_diff_coeff": 1.0*np.ones(n_uavs, dtype=np.float32),
@@ -95,7 +95,7 @@ env = se.UAVSwarmEnv3D(
     sensor_init_mode=sensor_init_mode,
     n_sensor_clusters=n_sensor_clusters,
     n_chains=n_chains,
-    connectivity_update_freq=10,
+    connectivity_update_freq=10000,
 )
 env.cbf_connectivity_neighbor_mode = cbf_connectivity_neighbor_mode
 env.set_head_motion(args.head_motion, n_head_clusters=args.head_n_clusters)
