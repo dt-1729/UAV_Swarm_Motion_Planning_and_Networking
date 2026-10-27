@@ -71,7 +71,7 @@ env = se.UAVSwarmEnv3D(
     simulation_params={"init_time": 0.0, "dt": 0.5, "max_time": max_time, "max_energy": 1.0e5},
     reward_params={
         "sensor_collect_coeff": 1000.0*np.ones(n_uavs, dtype=np.float32),
-        "potential_diff_coeff": 0.0*np.ones(n_uavs, dtype=np.float32),
+        "potential_diff_coeff": 1.0*np.ones(n_uavs, dtype=np.float32),
         "min_uav_height_penalty_coeff": 0.0,
         "collision_penalty_coeff": 0.0,
         "connectivity_penalty_coeff": 0.0,
@@ -88,7 +88,7 @@ env = se.UAVSwarmEnv3D(
         "s": 0.05,
         "A": 0.503,
     },
-    head_v_max=1.0,
+    head_v_max=4.0,
     follower_v_max=7.0,
     seed=random.randint(0, 2**32 - 1),
     sensor_sequence_strategy="tsp",
