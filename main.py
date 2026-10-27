@@ -88,7 +88,7 @@ env = se.UAVSwarmEnv3D(
         "s": 0.05,
         "A": 0.503,
     },
-    head_v_max=6.0,
+    head_v_max=1.0,
     follower_v_max=7.0,
     seed=random.randint(0, 2**32 - 1),
     sensor_sequence_strategy="tsp",
