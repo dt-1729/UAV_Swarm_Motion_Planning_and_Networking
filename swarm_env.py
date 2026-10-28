@@ -355,23 +355,13 @@ class UAVSwarmEnv3D:
 
 		uav_min = np.array([self.space_min[0], self.space_min[1], self.min_uav_height])
 		uav_max = self.space_max.copy()
-		uav_max[2] = np.maximum(self.min_uav_height, self.space_max[2])  # ensure UAVs are above min height
+		uav_max[2] = self.min_uav_height  # spawn the whole chain at the minimum safe altitude
 
 		uav_locs = np.zeros((self.n_uavs, 3))
 		self.uav_connectivity = np.zeros((self.n_uavs, self.n_uavs), dtype=bool)
 
-		# Keep head UAV near minimum safe altitude at spawn instead of anywhere in full z-range.
+		# Sensors are on the ground, so avoid teaching every follower to first descend.
 		head_pos = self.rng.uniform(uav_min, uav_max)
-		z_min = float(self.min_uav_height)
-		z_max = float(uav_max[2])
-		z_span = max(0.0, z_max - z_min)
-
-		head_height_window = min(0.20 * z_span, 0.95 * float(self.u2s_range))
-		head_z_upper = z_min + head_height_window
-		if head_z_upper <= z_min + 1e-9:
-			head_pos[2] = z_min
-		else:
-			head_pos[2] = self.rng.uniform(z_min, head_z_upper)
 		uav_locs[0] = head_pos
 		# uav_locs[0] = (uav_min + uav_max)/2
 
@@ -1005,7 +995,7 @@ class UAVSwarmEnv3D:
 			"visited_fraction": float(np.mean(self.visited.astype(np.float32))),
 		}
 
-		# print(f"time: {self.current_time:.4f}\tcumulative_reward: {self.cumulative_reward:.4f}")
+		print(f"time: {self.current_time:.4f}\tcumulative_reward: {self.cumulative_reward:.4f}")
 
 		return next_state, reward, terminated, truncated, info
 
