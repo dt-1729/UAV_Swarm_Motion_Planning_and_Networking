@@ -14,6 +14,7 @@ from mappo_env_interface import obs_adapter, action_adapter, reset_fn
 from cli_args import parse_main_args
 from training_utils import (
     build_results_run_dir,
+    format_float_tag,
     save_checkpoint,
     load_checkpoint,
     find_latest_checkpoint,
@@ -68,10 +69,10 @@ env = se.UAVSwarmEnv3D(
         "u2b_range": 20.0,
         "u2s_visibility_range": 100.0,
     },
-    simulation_params={"init_time": 0.0, "dt": 0.1, "max_time": max_time, "max_energy": 1.0e5},
+    simulation_params={"init_time": 0.0, "dt": 0.5, "max_time": max_time, "max_energy": 1.0e5},
     reward_params={
         "sensor_collect_coeff": 1000.0*np.ones(n_uavs, dtype=np.float32),
-        "potential_diff_coeff": 1.0*np.ones(n_uavs, dtype=np.float32),
+        "potential_diff_coeff": 10.0*np.ones(n_uavs, dtype=np.float32),
         "min_uav_height_penalty_coeff": 0.0,
         "collision_penalty_coeff": 0.0,
         "connectivity_penalty_coeff": 0.0,
@@ -112,8 +113,11 @@ trainer, initial_obs = build_trainer(
 if run_mode == "sim":
     print("Simulating the swarm...")
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dt_tag = format_float_tag(env.dt)
+    sensor_potential_coeff = format_float_tag(env.potential_diff_coeff[1])
     rollout_dir = Path("rollout_visualizations") / (
-        f"sim_n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}_head_{args.head_motion}_{run_stamp}"
+        f"sim_ns_{env.n_sensors}_nu_{env.n_uavs}_dt_{dt_tag}_sp_{sensor_potential_coeff}"
+        f"_hm_{args.head_motion}_{run_stamp}"
     )
     rollout_dir.mkdir(parents=True, exist_ok=True)
 
@@ -267,9 +271,12 @@ elif run_mode == "eval":
         model_folder_name = checkpoint_path.parent.parent.name
 
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dt_tag = format_float_tag(env.dt)
+    sensor_potential_coeff = format_float_tag(env.potential_diff_coeff[1])
     eval_dir = Path("rollout_visualizations") / (
         f"eval_{model_folder_name}_{checkpoint_name}_"
-        f"n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}_head_{args.head_motion}_{run_stamp}"
+        f"ns_{env.n_sensors}_nu_{env.n_uavs}_dt_{dt_tag}_sp_{sensor_potential_coeff}"
+        f"_hm_{args.head_motion}_{run_stamp}"
     )
     eval_dir.mkdir(parents=True, exist_ok=True)
 
