@@ -30,8 +30,13 @@ def build_results_run_dir(
     head_motion: Optional[str] = None,
 ) -> Path:
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    head_tag = f"_head_{head_motion}" if head_motion else ""
-    run_name = f"n_sensors_{env.n_sensors}_n_uavs_{env.n_uavs}{head_tag}_{run_stamp}"
+    head_tag = f"_hm_{head_motion}" if head_motion else ""
+    dt_tag = format_float_tag(env.dt)
+    sensor_potential_coeff = format_float_tag(env.potential_diff_coeff[1])
+    run_name = (
+        f"ns_{env.n_sensors}_nu_{env.n_uavs}"
+        f"_dt_{dt_tag}_sp_{sensor_potential_coeff}{head_tag}_{run_stamp}"
+    )
     run_dir = Path(root_dir) / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
     # Lets the cluster job script move Slurm logs into the run directory.
