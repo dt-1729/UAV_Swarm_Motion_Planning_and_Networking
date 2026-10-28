@@ -96,7 +96,7 @@ env = se.UAVSwarmEnv3D(
     sensor_init_mode=sensor_init_mode,
     n_sensor_clusters=n_sensor_clusters,
     n_chains=n_chains,
-    connectivity_update_freq=10000,
+    connectivity_update_freq=10,
 )
 env.cbf_connectivity_neighbor_mode = cbf_connectivity_neighbor_mode
 env.set_head_motion(args.head_motion, n_head_clusters=args.head_n_clusters)
