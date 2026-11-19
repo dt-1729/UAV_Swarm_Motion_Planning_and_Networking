@@ -8,6 +8,7 @@ _RUN_MODE_MAP = {
     "t": "train",
     "s": "sim",
     "e": "eval",
+    "h": "heuristic",
     "p": "plot",
 }
 
@@ -30,8 +31,8 @@ def parse_main_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "--run-mode",
         type=str,
         default="t",
-        choices=["t", "s", "e", "p"],
-        help="Execution mode: t=train, s=sim (random follower model), e=eval, p=plot.",
+        choices=["t", "s", "e", "p", "h"],
+        help="Execution mode: t=train, s=sim (random follower model), e=eval, p=plot, h=heuristic (nearest-sensor baseline).",
     )
     parser.add_argument(
         "-ec",
@@ -204,11 +205,76 @@ def parse_main_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="Number of sensor clusters the head visits in --head-motion=c.",
     )
     parser.add_argument(
+        "-hrp",
+        "--head-replan-period",
+        type=float,
+        default=0.0,
+        help="Seconds between adaptive TSP replans over unvisited sensors in --head-motion=c (0 = plan once).",
+    )
+    parser.add_argument(
+        "-hms",
+        "--head-min-speed",
+        type=float,
+        default=None,
+        help="Min head speed (m/s) at the TSP waypoints in --head-motion=c; omit for constant speed.",
+    )
+    parser.add_argument(
+        "-hsr",
+        "--head-slow-radius",
+        type=float,
+        default=None,
+        help="Distance from a waypoint where the head starts slowing (default: 3x the arrival radius).",
+    )
+    parser.add_argument(
+        "-scm",
+        "--sensor-cluster-metric",
+        type=str,
+        default="e",
+        choices=["e", "p"],
+        help="Sensor-to-UAV clustering distance: e=3D Euclidean, p=polar about the head (|dr| + min(r)*dtheta).",
+    )
+    parser.add_argument(
+        "-srm",
+        "--sensor-reach-margin",
+        type=float,
+        default=0.9,
+        help="Polar clustering: fraction of the full link length a chain may stretch when judging reachability.",
+    )
+    parser.add_argument(
+        "-nrm",
+        "--no-reach-mask",
+        action="store_true",
+        help="Polar clustering: do not exclude sensors a follower's chain cannot reach.",
+    )
+    parser.add_argument(
         "-nc",
         "--n-chains",
         type=int,
         default=2,
         help="Number of follower chains rooted at head UAV (>=1).",
+    )
+
+    parser.add_argument(
+        "-cd",
+        "--chain-depth",
+        type=int,
+        default=None,
+        help="Max followers per chain (hops from the head); builds ceil(followers/depth) chains and overrides --n-chains. 1 = star.",
+    )
+
+    parser.add_argument(
+        "-st",
+        "--star",
+        action="store_true",
+        help="Star topology: every follower links directly to the head (overrides --n-chains).",
+    )
+
+    parser.add_argument(
+        "-hcf",
+        "--heuristic-connectivity-freq",
+        type=int,
+        default=1,
+        help="Heuristic mode: connectivity graph refresh period in steps (1 = every step).",
     )
 
     args = parser.parse_args(argv)
@@ -221,6 +287,7 @@ def parse_main_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     args.sensor_init_mode = _SENSOR_INIT_MODE_MAP[args.sensor_init_mode]
     args.head_motion = {"s": "stationary", "r": "random", "c": "cluster_tsp"}[args.head_motion]
     args.head_n_clusters = max(1, int(args.head_n_clusters))
+    args.sensor_cluster_metric = {"e": "euclid", "p": "polar"}[args.sensor_cluster_metric]
 
     # Normalize numeric ranges once so main code stays clean.
     args.smoothing_window = max(1, int(args.smoothing_window))
@@ -236,6 +303,11 @@ def parse_main_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     args.n_sensors = max(1, int(args.n_sensors))
     args.n_sensor_clusters = max(1, int(args.n_sensor_clusters))
     args.n_chains = max(1, int(args.n_chains))
+    if args.star:
+        args.chain_depth = 1
+    if args.chain_depth is not None:
+        args.chain_depth = max(1, int(args.chain_depth))
+        args.n_chains = -(-(args.n_uavs - 1) // args.chain_depth)
     if args.direction_head_temperature_final is not None:
         args.direction_head_temperature_final = float(args.direction_head_temperature_final)
 

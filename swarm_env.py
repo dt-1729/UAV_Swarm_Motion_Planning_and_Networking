@@ -5,10 +5,12 @@ import cvxpy as cp
 import torch
 import cbf_filter as cf
 import ma_connectivity_filter as mcf
+import collision_filter as ccf
+import height_filter as hf
 
 class UAVSwarmEnv3D:
 
-	def __init__(self, n_uavs, n_sensors, n_obstacles, box_size, min_uav_height, com_params, simulation_params, reward_params, power_params, head_v_max, follower_v_max, seed=0, sensor_sequence_strategy="random", sensor_init_mode="stratified", n_sensor_clusters=3, n_chains=1, connectivity_update_freq=1):
+	def __init__(self, n_uavs, n_sensors, n_obstacles, box_size, min_uav_height, com_params, simulation_params, reward_params, power_params, head_v_max, follower_v_max, seed=0, sensor_sequence_strategy="random", sensor_init_mode="stratified", n_sensor_clusters=3, n_chains=1, connectivity_update_freq=1, chain_depth=None):
 
 		# initialize environment parameters
 		if n_uavs < 2:
@@ -21,6 +23,9 @@ class UAVSwarmEnv3D:
 		# the connectivity filter keeps links inside this fraction of u2u_range so they never sit on the boundary
 		self.filter_range_margin = 0.98
 		self.filter_failures = 0
+		self.use_collision_filter = False
+		self.use_height_filter = False
+		self.collision_filter_failures = 0
 		self.n_sensors = n_sensors
 		self.box_size = box_size
 		self.seed = seed
@@ -38,8 +43,10 @@ class UAVSwarmEnv3D:
 
 		# tree topology: distribute n_followers evenly across n_chains branches from head
 		self.n_chains = max(1, n_chains)
-		self._build_chain_topology(self.n_chains)
+		self.chain_depth = None if chain_depth is None else max(1, int(chain_depth))
+		self._build_chain_topology(self.n_chains, self.chain_depth)
 		self.reparent_on_init_failure = False
+		self.set_sensor_clustering("euclid")
 		self.enforce_chain_spawn = True
 		self.enforce_nonchild_outside_head_range = True
 
@@ -70,7 +77,8 @@ class UAVSwarmEnv3D:
 		print(f"Minimum UAV height: {self.min_uav_height}")
 
 		# initialize base_station location
-		self.bs_loc = self.rng.uniform(0.7*self.space_max, self.space_max, (3,))
+		self.bs_loc = self.rng.uniform(0.7*self.space_max, self.space_max, (3,))*0.0
+		self.bs_loc[2] = self.space_min[2]  # base station sits on the ground
 
 		# initialize sensor locations, and visited state
 		self.init_sensor_locs()
@@ -151,13 +159,25 @@ class UAVSwarmEnv3D:
 				elif i != self.head_uav_idx:
 					self.compute_follower_sensor_potential(uav_id=i, sensor_idx=j)
 
-	def _build_chain_topology(self, n_chains):
-		"""Build uav_parent and uav_parent_template for a given number of chains."""
+	def _build_chain_topology(self, n_chains, chain_depth=None):
+		"""
+		Build uav_parent and uav_parent_template.
+
+		chain_depth: if given, every chain has at most this many followers (hops from the head), so
+			ceil(n_followers / chain_depth) chains are built and the last one may be shorter; n_chains is
+			ignored. depth 1 is a star and depth >= n_followers is a single chain.
+		Otherwise the followers are split evenly across n_chains chains.
+		"""
 		n_followers = self.n_uavs - 1
-		n_chains = max(1, min(int(n_chains), n_followers)) if n_followers > 0 else 1
+		if chain_depth is not None and n_followers > 0:
+			chain_depth = max(1, int(chain_depth))
+			chain_lengths = [min(chain_depth, n_followers - start) for start in range(0, n_followers, chain_depth)]
+			n_chains = len(chain_lengths)
+		else:
+			n_chains = max(1, min(int(n_chains), n_followers)) if n_followers > 0 else 1
+			base, remainder = divmod(n_followers, n_chains)
+			chain_lengths = [base + (1 if c < remainder else 0) for c in range(n_chains)]
 		self.n_chains = n_chains
-		base, remainder = divmod(n_followers, n_chains)
-		chain_lengths = [base + (1 if c < remainder else 0) for c in range(n_chains)]
 		self.uav_parent = np.full(self.n_uavs, -1, dtype=int)
 		uav_idx = 1
 		for chain_len in chain_lengths:
@@ -442,7 +462,7 @@ class UAVSwarmEnv3D:
 					for j in range(i):
 						dist_to_j = np.linalg.norm(candidate_pos - uav_locs[j])
 						if self.u2u_safe_dist <= dist_to_j <= 0.95 * self.u2u_range:
-							if bool(getattr(self, "enforce_chain_spawn", True)):
+							if not bool(getattr(self, "reparent_on_init_failure", False)):
 								if j == configured_parent_idx:
 									valid_parent_idxs.append(j)
 							else:
@@ -482,6 +502,12 @@ class UAVSwarmEnv3D:
 		self.uav_locs = uav_locs
 				
 
+	def _degree_cap(self, uav_id):
+		# the head is the root of every branch, so it must be able to link to all of its children
+		if uav_id == self.head_uav_idx:
+			return max(self.max_uav_degree, int(np.sum(self.uav_parent == self.head_uav_idx)))
+		return self.max_uav_degree
+
 	def update_uav_connectivity(self):
 		"""
 		Computes the graph connectivity set for all UAVs based on their current positions.
@@ -513,7 +539,7 @@ class UAVSwarmEnv3D:
 		# back to the head), then the shortest remaining ones, while respecting the max degree.
 		candidate_edges.sort(key=lambda x: (x[0], x[1]))
 		for _, _, i, j in candidate_edges:
-			if degrees[i] >= self.max_uav_degree or degrees[j] >= self.max_uav_degree:
+			if degrees[i] >= self._degree_cap(i) or degrees[j] >= self._degree_cap(j):
 				continue
 			self.uav_neighbors[i].add(j)
 			self.uav_neighbors[j].add(i)
@@ -551,6 +577,176 @@ class UAVSwarmEnv3D:
 					queue.append(nbr)
 		self.hop_ids = hop_ids
 		return hop_ids
+
+	def set_sensor_clustering(self, metric="euclid", reach_margin=0.9, polar_use_reach_mask=True):
+		"""
+		Configure how assign_sensors_to_uavs measures sensor-to-UAV distance.
+
+		metric: "euclid" (3D Euclidean distance) or "polar" (see polar_sensor_uav_distance).
+		reach_margin: fraction of the full link length a chain may be stretched when judging reachability.
+		polar_use_reach_mask: in "polar" mode, do not assign a sensor to a follower whose chain cannot reach it.
+		"""
+		if metric not in ("euclid", "polar"):
+			raise ValueError(f"Unknown sensor clustering metric: {metric}")
+		self.cluster_metric = metric
+		self.cluster_reach_margin = float(reach_margin)
+		self.cluster_polar_use_reach_mask = bool(polar_use_reach_mask)
+
+	def polar_sensor_uav_distance(self, sensor_ids, uav_ids):
+		"""
+		Polar distance d = |r_X - r_Y| + rho * theta between sensors X and UAVs Y, shape (n_sensors, n_uavs).
+
+		Polar coordinates are taken about the head's current position in the horizontal plane: r is the
+		horizontal distance from the head and theta the azimuth angle between the two position vectors
+		(altitude is ignored, since sensors are on the ground). rho = min(r_X, r_Y) turns the angle into an
+		arc length in metres. It also removes the undefined angle near the head, where rho -> 0.
+		"""
+		head_xy = self.uav_locs[self.head_uav_idx][:2]
+		xs = self.sensor_locs[sensor_ids][:, :2] - head_xy  # (S, 2)
+		ys = self.uav_locs[uav_ids][:, :2] - head_xy  # (U, 2)
+		r_x = np.linalg.norm(xs, axis=1)[:, None]
+		r_y = np.linalg.norm(ys, axis=1)[None, :]
+		dot = xs @ ys.T
+		cross = xs[:, 0:1] * ys[:, 1][None, :] - xs[:, 1:2] * ys[:, 0][None, :]
+		theta = np.arctan2(np.abs(cross), dot)  # well conditioned near 0 and pi; 0 for a zero vector
+		return np.abs(r_x - r_y) + np.minimum(r_x, r_y) * theta
+
+	def _uav_depth(self, uav_id):
+		"""Number of hops from the UAV to the head along the parent links."""
+		depth = 0
+		while uav_id != self.head_uav_idx:
+			uav_id = int(self.uav_parent[uav_id])
+			depth += 1
+		return depth
+
+	def reachable_sensor_mask(self, uav_id, sensor_ids=None):
+		"""
+		Boolean mask of the sensors a UAV could service given its chain depth and the head's current position:
+		distance from the head <= depth * margin * 0.98 * u2u_range + u2s_range.
+		"""
+		margin = getattr(self, "cluster_reach_margin", 0.9)
+		sensor_locs = self.sensor_locs if sensor_ids is None else self.sensor_locs[sensor_ids]
+		reach = self._uav_depth(uav_id) * margin * self.filter_range_margin * self.u2u_range + self.u2s_range
+		return np.linalg.norm(sensor_locs - self.uav_locs[self.head_uav_idx], axis=1) <= reach
+
+	def assign_sensors_to_uavs(self, include_head=False, unvisited_only=True):
+		"""
+		Constrained clustering of sensors: each sensor goes to exactly one UAV, the nearest one under the
+		configured metric (set_sensor_clustering): 3D Euclidean distance, or the polar distance. A UAV may
+		receive any number of sensors, including none.
+
+		In "polar" mode with the reachability mask on, sensors that no follower can reach from the head's
+		current position are left unassigned.
+
+		include_head: also let the head UAV receive sensors (it does not collect data, so default False).
+		unvisited_only: only assign sensors that have not been visited yet.
+
+		Returns dict {uav_id: [sensor indices]} with an entry for every candidate UAV.
+		"""
+		uav_ids = [i for i in range(self.n_uavs) if include_head or i != self.head_uav_idx]
+		assignments = {uav_id: [] for uav_id in uav_ids}
+		sensor_ids = np.flatnonzero(~self.visited) if unvisited_only else np.arange(self.n_sensors)
+		if sensor_ids.size == 0 or len(uav_ids) == 0:
+			return assignments
+
+		# (n_assigned_sensors, n_candidate_uavs) distance matrix
+		metric = getattr(self, "cluster_metric", "euclid")
+		if metric == "polar":
+			dists = self.polar_sensor_uav_distance(sensor_ids, uav_ids)
+			if getattr(self, "cluster_polar_use_reach_mask", True):
+				for k, uav_id in enumerate(uav_ids):
+					if uav_id != self.head_uav_idx:
+						dists[~self.reachable_sensor_mask(uav_id, sensor_ids), k] = np.inf
+		else:
+			dists = np.linalg.norm(
+				self.sensor_locs[sensor_ids][:, None, :] - self.uav_locs[uav_ids][None, :, :], axis=-1
+			)
+		nearest = np.argmin(dists, axis=1)  # ties go to the lowest UAV index
+		assignable = np.isfinite(dists[np.arange(len(sensor_ids)), nearest])
+		for sensor_idx, k, ok in zip(sensor_ids, nearest, assignable):
+			if ok:
+				assignments[uav_ids[k]].append(int(sensor_idx))
+
+		return assignments
+
+	def select_nearest_sensor(self, uav_id, assignments=None):
+		"""
+		Nearest unvisited sensor (3D Euclidean distance) within the UAV's own cluster, i.e. among the
+		sensors assigned to it by assign_sensors_to_uavs. Returns the sensor index, or None if the
+		UAV's cluster is empty.
+
+		assignments: precomputed output of assign_sensors_to_uavs, so a caller can cluster once per step
+			and select for every UAV.
+		"""
+		if assignments is None:
+			assignments = self.assign_sensors_to_uavs(include_head=(uav_id == self.head_uav_idx))
+		cluster = assignments.get(uav_id, [])
+		if len(cluster) == 0:
+			return None
+
+		dists = np.linalg.norm(self.sensor_locs[cluster] - self.uav_locs[uav_id], axis=-1)
+		return int(cluster[int(np.argmin(dists))])
+
+	def select_direction_to_sensor(self, uav_id, assignments=None, eps=1e-9):
+		"""
+		Unit vector from the UAV toward its selected sensor (see select_nearest_sensor).
+		Returns (direction, sensor_idx); direction is the zero vector and sensor_idx is None when the
+		UAV has no assigned sensor, and the zero vector when it is already on top of the sensor.
+		"""
+		sensor_idx = self.select_nearest_sensor(uav_id, assignments=assignments)
+		return self._direction_to_sensor(uav_id, sensor_idx, eps), sensor_idx
+
+	def _direction_to_sensor(self, uav_id, sensor_idx, eps=1e-9):
+		if sensor_idx is None:
+			return np.zeros(3)
+		to_sensor = self.sensor_locs[sensor_idx] - self.uav_locs[uav_id]
+		norm = np.linalg.norm(to_sensor)
+		if norm < eps:
+			return np.zeros(3)
+		return to_sensor / norm
+
+	def select_follower_targets(self):
+		"""
+		Heuristic target per follower, as {uav_id: sensor_idx or None}.
+
+		- A follower keeps its current target until it is visited (hysteresis), so sensors near a cluster
+		  boundary do not make UAVs dither between targets.
+		- Otherwise it takes the nearest sensor in its own cluster (assign_sensors_to_uavs).
+		- A follower with an empty cluster falls back to the nearest unvisited sensor globally, preferring
+		  sensors no other follower is already targeting.
+		"""
+		follower_ids = [i for i in range(self.n_uavs) if i != self.head_uav_idx]
+		previous = getattr(self, "_sensor_targets", None) or {}
+		assignments = self.assign_sensors_to_uavs()
+		targets = {}
+		for uav_id in follower_ids:
+			current = previous.get(uav_id)
+			keep = current is not None and not self.visited[current]
+			if keep and self.cluster_metric == "polar" and self.cluster_polar_use_reach_mask:
+				keep = bool(self.reachable_sensor_mask(uav_id)[current])  # drop a sticky target the head has left behind
+			if keep:
+				targets[uav_id] = current
+			else:
+				targets[uav_id] = self.select_nearest_sensor(uav_id, assignments)
+
+		unvisited = np.flatnonzero(~self.visited)
+		for uav_id in follower_ids:
+			if targets[uav_id] is not None or unvisited.size == 0:
+				continue
+			taken = {s for s in targets.values() if s is not None}
+			free = np.array([s for s in unvisited if s not in taken], dtype=int)
+			candidates = free if free.size > 0 else unvisited
+			dists = np.linalg.norm(self.sensor_locs[candidates] - self.uav_locs[uav_id], axis=-1)
+			targets[uav_id] = int(candidates[int(np.argmin(dists))])
+
+		self._sensor_targets = targets
+		return targets
+
+	def select_follower_directions(self):
+		"""Unit directions toward each follower's heuristic target, shape (n_followers, 3), ascending UAV index."""
+		targets = self.select_follower_targets()
+		follower_ids = [i for i in range(self.n_uavs) if i != self.head_uav_idx]
+		return np.array([self._direction_to_sensor(uav_id, targets[uav_id]) for uav_id in follower_ids])
 
 	def compute_follower_sensor_potential(self, sensor_idx, uav_id):
 		potential = 0.0
@@ -600,6 +796,7 @@ class UAVSwarmEnv3D:
 			current_sensor_potential = self.total_potential(uav_id)
 			current_connectivity_potential = self.compute_connectivity_potential(uav_id)
 			self.uav_locs[uav_id] += self.uav_controls[uav_id] * self.dt
+			self.uav_locs[uav_id][2] = np.clip(self.uav_locs[uav_id][2], self.min_uav_height, self.space_max[2])
 			new_sensor_potential = self.total_potential(uav_id)
 			sensor_potential_diffs[uav_id] = new_sensor_potential - current_sensor_potential
 			new_connectivity_potential = self.compute_connectivity_potential(uav_id)
@@ -708,7 +905,6 @@ class UAVSwarmEnv3D:
 			for sensor_idx in range(self.n_sensors):
 				if np.linalg.norm(self.uav_locs[uav_id] - self.sensor_locs[sensor_idx]) <= self.u2s_range:
 					sensor_collection_reward += self.collect_sensor_data(uav_id, sensor_idx)
-					break  # Only collect from one sensor per UAV per step
 			# energy consumption penalty
 			# to be added
 			# latency penalty
@@ -764,7 +960,8 @@ class UAVSwarmEnv3D:
 
 
 	def set_head_motion(self, mode="stationary", turn_rate=0.3, correlation_time=5.0, boundary_margin_frac=0.1, boundary_gain=1.0,
-			n_head_clusters=5, head_max_turn_rate=0.5, head_arrival_radius=None, head_loop_tour=True):
+			n_head_clusters=5, head_max_turn_rate=0.5, head_arrival_radius=None, head_loop_tour=True, head_replan_period=0.0,
+			head_min_speed=None, head_slow_radius=None):
 		"""
 		Configure the head UAV motion.
 
@@ -777,6 +974,11 @@ class UAVSwarmEnv3D:
 		head_max_turn_rate: maximum heading rotation rate (rad/s) when flying to a cluster, which keeps the path smooth.
 		head_arrival_radius: distance at which a cluster counts as visited (defaults to the u2s range).
 		head_loop_tour: restart the tour after the last cluster; otherwise the head hovers there.
+		head_replan_period: simulation time (s) between adaptive replans of the "cluster_tsp" tour over the
+			still-unvisited sensors; 0 keeps the initial plan for the whole episode.
+		head_min_speed: speed (m/s) the "cluster_tsp" head slows down to at the tour waypoints; None disables
+			slowing (constant head_v_max). Clipped to [0, head_v_max].
+		head_slow_radius: distance from a waypoint where the slow-down starts (defaults to 3x the arrival radius).
 		"""
 		if mode not in ("stationary", "random", "cluster_tsp"):
 			raise ValueError(f"Unknown head motion mode: {mode}")
@@ -789,6 +991,9 @@ class UAVSwarmEnv3D:
 		self.head_max_turn_rate = float(head_max_turn_rate)
 		self.head_arrival_radius = float(self.u2s_range if head_arrival_radius is None else head_arrival_radius)
 		self.head_loop_tour = bool(head_loop_tour)
+		self.head_replan_period = max(0.0, float(head_replan_period))
+		self.head_min_speed = None if head_min_speed is None else float(np.clip(head_min_speed, 0.0, self.head_v_max))
+		self.head_slow_radius = float(3.0 * self.head_arrival_radius if head_slow_radius is None else head_slow_radius)
 		self._head_tour = None
 		self._reset_head_heading()
 
@@ -844,15 +1049,25 @@ class UAVSwarmEnv3D:
 		return [p - 1 for p in path[1:]]
 
 	def _plan_head_tour(self):
-		"""Cluster the sensors and order the cluster centroids into a TSP tour starting from the head."""
-		centroids = self._kmeans(np.asarray(self.sensor_locs, dtype=float), self.n_head_clusters)
+		"""Cluster the unvisited sensors and order the cluster centroids into a TSP tour starting from the head."""
+		remaining = np.asarray(self.sensor_locs, dtype=float)[~self.visited]
+		if len(remaining) == 0:
+			remaining = np.asarray(self.sensor_locs, dtype=float)
+		centroids = self._kmeans(remaining, self.n_head_clusters)
 		centroids[:, 2] = np.clip(centroids[:, 2], self.min_uav_height, self.space_max[2])
 		order = self._tsp_open_path(self.uav_locs[self.head_uav_idx], centroids)
 		self.head_tour_centroids = centroids[order]
 		self._head_tour = {"waypoints": self.head_tour_centroids, "idx": 0}
+		self._head_last_plan_time = self.current_time
 
 	def _cluster_tsp_head_direction(self):
-		if self._head_tour is None:
+		replan_due = (
+			self.head_replan_period > 0.0
+			and self._head_tour is not None
+			and self.current_time - self._head_last_plan_time >= self.head_replan_period
+			and not self.visited.all()
+		)
+		if self._head_tour is None or replan_due:
 			self._plan_head_tour()
 		tour = self._head_tour
 		pos = self.uav_locs[self.head_uav_idx]
@@ -887,6 +1102,23 @@ class UAVSwarmEnv3D:
 		self._head_heading = new_heading / np.linalg.norm(new_heading)
 		return self._head_heading.copy()
 
+	def _head_speed(self):
+		"""
+		Head speed for this step. In "cluster_tsp" mode with head_min_speed set, the head ramps linearly from
+		head_v_max down to head_min_speed as it approaches its current target waypoint (within head_slow_radius),
+		reaching head_min_speed at the arrival radius; once the target advances it speeds up again.
+		Otherwise it flies at head_v_max.
+		"""
+		min_speed = getattr(self, "head_min_speed", None)
+		tour = getattr(self, "_head_tour", None)
+		if getattr(self, "head_motion_mode", "stationary") != "cluster_tsp" or min_speed is None or tour is None:
+			return self.head_v_max
+		dist = np.linalg.norm(tour["waypoints"][tour["idx"]] - self.uav_locs[self.head_uav_idx])
+		span = max(self.head_slow_radius - self.head_arrival_radius, 1e-9)
+		frac = np.clip((dist - self.head_arrival_radius) / span, 0.0, 1.0)
+		# small floor so the head always crosses the arrival radius, even with head_min_speed=0
+		return max(min_speed + (self.head_v_max - min_speed) * frac, 0.05 * self.head_v_max)
+
 	def _next_head_direction(self):
 		"""
 		Unit direction for the head UAV. In random mode the heading is rotated by a smooth
@@ -918,6 +1150,42 @@ class UAVSwarmEnv3D:
 		self._head_heading = new_heading / np.linalg.norm(new_heading)
 		return self._head_heading.copy()
 
+	def _links_preserved(self, dirs, speeds, tol=1e-5, alpha=0.5):
+		"""True if `dirs` satisfy the connectivity filter's link constraint on every edge of the current graph."""
+		iu, ju = np.where(np.triu(self.uav_connectivity, 1))
+		if iu.size == 0:
+			return True
+		range_sq = (self.u2u_range * self.filter_range_margin) ** 2
+		rel = self.uav_locs[ju] - self.uav_locs[iu]
+		fut = rel + self.dt * (speeds[ju, None] * dirs[ju] - speeds[iu, None] * dirs[iu])
+		margin = range_sq - np.sum(fut**2, axis=1) - (1.0 - alpha) * (range_sq - np.sum(rel**2, axis=1))
+		return bool(np.all(margin >= -tol * range_sq))
+
+	def _filtered_dirs_usable(self, dirs, speeds, follower_ids):
+		if not np.all(np.isfinite(dirs)):
+			return False
+		if not np.allclose(np.linalg.norm(dirs[follower_ids], axis=1), 1.0, atol=1e-2):
+			return False
+		return self._links_preserved(dirs, speeds)
+
+	def _recover_link_preserving_dirs(self, policy_dirs, speeds, follower_ids):
+		"""Fallback when the connectivity filter returns a link-violating solution: pull followers toward their parent."""
+		pull = policy_dirs.copy()
+		for i in follower_ids:
+			parent = self.uav_parent[i]
+			if parent >= 0:
+				to_parent = self.uav_locs[parent] - self.uav_locs[i]
+				norm = np.linalg.norm(to_parent)
+				if norm > 1e-9:
+					pull[i] = to_parent / norm
+		retry = mcf.multi_agent_connectivity_filter(self.uav_locs, pull, speeds, self.dt, self.u2u_range * self.filter_range_margin, self.uav_connectivity)
+		retry_dirs = retry.x.reshape(self.n_uavs, 3)
+		retry_dirs[self.head_uav_idx] = policy_dirs[self.head_uav_idx]
+		if self._filtered_dirs_usable(retry_dirs, speeds, follower_ids):
+			return retry_dirs
+		self.filter_fallbacks = getattr(self, "filter_fallbacks", 0) + 1
+		return pull
+
 	def step(self, env_action):
 		"""Apply follower direction actions in ascending UAV-index order, excluding the head."""
 		follower_ids = [uav_id for uav_id in range(self.n_uavs) if uav_id != self.head_uav_idx]
@@ -931,7 +1199,7 @@ class UAVSwarmEnv3D:
 		policy_dirs[follower_ids] = env_action
 		policy_dirs[self.head_uav_idx] = self._next_head_direction()
 		max_speeds = self.follower_v_max * np.ones(self.n_uavs)
-		max_speeds[self.head_uav_idx] = self.head_v_max
+		max_speeds[self.head_uav_idx] = self._head_speed()
 
 		# Update connectivity based on frequency setting (default: every step)
 		if self.update_counter % self.connectivity_update_freq == 0:
@@ -941,21 +1209,35 @@ class UAVSwarmEnv3D:
 		if not uav_connected.all():
 			self.connectivity_violations += 1
 		
+		# optional min-height filter on the nominal directions
+		if self.use_height_filter:
+			policy_dirs = hf.height_filter(self.uav_locs, policy_dirs, max_speeds, self.dt, self.min_uav_height)
+
 		# filter the policy control to preserve connectivity
 		result = mcf.multi_agent_connectivity_filter(self.uav_locs, policy_dirs, max_speeds, self.dt, self.u2u_range * self.filter_range_margin, self.uav_connectivity)
 		filtered_dirs = result.x.reshape(self.n_uavs, 3)
 		if not result.success:
 			self.filter_failures += 1
-			follower_norms = np.linalg.norm(filtered_dirs[follower_ids], axis=1)
-			if not (np.all(np.isfinite(filtered_dirs)) and np.allclose(follower_norms, 1.0, atol=1e-2)):
-				# unusable solution: reuse the last valid filtered directions (or the nominal ones on the first step)
-				fallback = getattr(self, "_last_filtered_dirs", None)
-				if fallback is None:
-					fallback = policy_dirs.copy()
-				filtered_dirs = fallback.copy()
 			if self.filter_failures == 1:
-				print(f"[swarm_env] connectivity filter did not converge ({result.message}); using fallback directions")
+				print(f"[swarm_env] connectivity filter did not converge ({result.message}); checking the solution")
+		# a solver stop (even with success=True) is only trusted if the link constraints actually hold
+		if not self._filtered_dirs_usable(filtered_dirs, max_speeds, follower_ids):
+			filtered_dirs = self._recover_link_preserving_dirs(policy_dirs, max_speeds, follower_ids)
 		filtered_dirs[self.head_uav_idx] = policy_dirs[self.head_uav_idx]
+		# collision filter runs after the connectivity filter and keeps its link constraints
+		if self.use_collision_filter:
+			collision_result = ccf.multi_agent_collision_filter(
+				self.uav_locs, filtered_dirs, max_speeds, self.dt, self.u2u_safe_dist,
+				u2u_range=self.u2u_range * self.filter_range_margin, uav_connectivity_matrix=self.uav_connectivity,
+			)
+			collision_dirs = collision_result.x.reshape(self.n_uavs, 3)
+			collision_norms = np.linalg.norm(collision_dirs[follower_ids], axis=1)
+			if collision_result.success and np.all(np.isfinite(collision_dirs)) and np.allclose(collision_norms, 1.0, atol=1e-2):
+				filtered_dirs = collision_dirs
+			else:
+				self.collision_filter_failures += 1
+		# No height re-projection here: it would rescale horizontal motion and break the link constraints.
+		# update_uav_positions clamps z, which can only shorten a move.
 		self._last_filtered_dirs = filtered_dirs.copy()
 		self.uav_controls = filtered_dirs * max_speeds[:, None]
 
@@ -1004,7 +1286,9 @@ class UAVSwarmEnv3D:
 		Resets the UAV states to their initial values.
 		"""
 		# Preserve configured chain count across resets.
-		self._build_chain_topology(self.n_chains)
+		self._build_chain_topology(self.n_chains, self.chain_depth)
+		# in a star every follower hangs off the head, so they cannot all be spawned out of each other's range
+		self.enforce_chain_spawn = self.n_chains < self.n_uavs - 1
 		try:
 			self.init_uav_locs()
 		except RuntimeError:
@@ -1028,7 +1312,9 @@ class UAVSwarmEnv3D:
 		self.uav_sensor_coverage = np.zeros(self.n_uavs, dtype=float)
 		self.update_counter = 0
 		self.filter_failures = 0
+		self.collision_filter_failures = 0
 		self._last_filtered_dirs = None
+		self._sensor_targets = {}
 		self.connectivity_violations = 0
 		self.update_uav_connectivity()
 		for uav_id in range(self.n_uavs):
@@ -1047,6 +1333,81 @@ class UAVSwarmEnv3D:
 		self.init_sensor_locs()
 		next_state = self.reset_uav_states()
 		return next_state
+
+
+def _new_trajectory(env):
+	return {
+		"uav_locs": [env.uav_locs.copy()],
+		"times": [env.current_time],
+		"reward_per_step": [],
+		"visited_fraction": [float(np.mean(env.visited))],
+		"visited_mask": [np.asarray(env.visited, dtype=bool).copy()],
+		"connectivity": [env.uav_connectivity.copy()],
+		"sensor_locs": np.asarray(env.sensor_locs, dtype=np.float32).copy(),
+		"base_station": np.asarray(env.bs_loc, dtype=np.float32).copy(),
+		"u2u_range": float(env.u2u_range),
+		"u2u_safe_dist": float(env.u2u_safe_dist),
+		"space_min": np.asarray(env.space_min, dtype=np.float32).copy(),
+		"space_max": np.asarray(env.space_max, dtype=np.float32).copy(),
+		"head_uav_idx": int(env.head_uav_idx),
+		"follower_uav_ids": [i for i in range(env.n_uavs) if i != env.head_uav_idx],
+	}
+
+
+def _record_trajectory_step(trajectory, env, reward):
+	trajectory["uav_locs"].append(env.uav_locs.copy())
+	trajectory["times"].append(env.current_time)
+	trajectory["reward_per_step"].append(float(reward))
+	trajectory["visited_fraction"].append(float(np.mean(env.visited)))
+	trajectory["visited_mask"].append(np.asarray(env.visited, dtype=bool).copy())
+	trajectory["connectivity"].append(env.uav_connectivity.copy())
+
+
+def _finalize_trajectory(trajectory, terminated, truncated):
+	for key in ("uav_locs", "times", "reward_per_step", "visited_fraction", "visited_mask", "connectivity"):
+		trajectory[key] = np.asarray(trajectory[key])
+	trajectory["terminated"] = terminated
+	trajectory["truncated"] = truncated
+	return trajectory
+
+
+def simulate_heuristic(env, max_steps=None, reset=True, connectivity_update_freq=1, collision_filter=False, height_filter=False):
+	"""
+	Roll out the deterministic nearest-sensor baseline (no learning).
+
+	Each step: the head moves per its head motion mode, every follower heads for the nearest sensor in its
+	own cluster (env.select_follower_directions), directions go through the connectivity filter (and optionally the height and collision filters),
+	positions are updated, and any unvisited sensor within range of a follower is collected. Repeats until termination.
+
+	connectivity_update_freq: connectivity graph refresh period in steps (1 = every step); restored afterwards.
+	collision_filter / height_filter: enable the min-distance (u2u_safe_dist) and min-height (min_uav_height) filters, both off by default (z is clamped in update_uav_positions).
+	Returns the same trajectory dict as simulate().
+	"""
+	previous_freq = env.connectivity_update_freq
+	previous_filters = (env.use_collision_filter, env.use_height_filter)
+	env.connectivity_update_freq = max(1, int(connectivity_update_freq))
+	env.use_collision_filter = bool(collision_filter)
+	env.use_height_filter = bool(height_filter)
+	try:
+		if reset:
+			env.reset_env(env.n_sensors)
+		else:
+			env.update_states()
+		if max_steps is None:
+			max_steps = int(np.ceil((env.max_time - env.current_time) / env.dt))
+
+		trajectory = _new_trajectory(env)
+		terminated = truncated = False
+		for _ in range(max_steps):
+			_, reward, terminated, truncated, _ = env.step(env.select_follower_directions())
+			_record_trajectory_step(trajectory, env, reward)
+			if terminated or truncated:
+				break
+	finally:
+		env.connectivity_update_freq = previous_freq
+		env.use_collision_filter, env.use_height_filter = previous_filters
+
+	return _finalize_trajectory(trajectory, terminated, truncated)
 
 
 def simulate(env, model_filename, max_steps=None, use_mean_direction=True, direction_temperature=1.0, reset=True, device="cpu"):
@@ -1078,24 +1439,8 @@ def simulate(env, model_filename, max_steps=None, use_mean_direction=True, direc
 	if max_steps is None:
 		max_steps = int(np.ceil((env.max_time - env.current_time) / env.dt))
 
-	trajectory = {
-		"uav_locs": [env.uav_locs.copy()],
-		"times": [env.current_time],
-		"reward_per_step": [],
-		"visited_fraction": [float(np.mean(env.visited))],
-		"visited_mask": [np.asarray(env.visited, dtype=bool).copy()],
-		"connectivity": [env.uav_connectivity.copy()],
-		"sensor_locs": np.asarray(env.sensor_locs, dtype=np.float32).copy(),
-		"base_station": np.asarray(env.bs_loc, dtype=np.float32).copy(),
-		"u2u_range": float(env.u2u_range),
-		"u2u_safe_dist": float(env.u2u_safe_dist),
-		"space_min": np.asarray(env.space_min, dtype=np.float32).copy(),
-		"space_max": np.asarray(env.space_max, dtype=np.float32).copy(),
-		"head_uav_idx": int(env.head_uav_idx),
-		"follower_uav_ids": [i for i in range(env.n_uavs) if i != env.head_uav_idx],
-	}
+	trajectory = _new_trajectory(env)
 	terminated = truncated = False
-
 	for _ in range(max_steps):
 		follower_obs = {
 			k: v.to(device) for k, v in obs_adapter(env, raw_obs)["follower_actor_obs"].items()
@@ -1122,17 +1467,8 @@ def simulate(env, model_filename, max_steps=None, use_mean_direction=True, direc
 
 		raw_obs, reward, terminated, truncated, _ = env.step(env_action)
 
-		trajectory["uav_locs"].append(env.uav_locs.copy())
-		trajectory["times"].append(env.current_time)
-		trajectory["reward_per_step"].append(float(reward))
-		trajectory["visited_fraction"].append(float(np.mean(env.visited)))
-		trajectory["visited_mask"].append(np.asarray(env.visited, dtype=bool).copy())
-		trajectory["connectivity"].append(env.uav_connectivity.copy())
+		_record_trajectory_step(trajectory, env, reward)
 		if terminated or truncated:
 			break
 
-	for key in ("uav_locs", "times", "reward_per_step", "visited_fraction", "visited_mask", "connectivity"):
-		trajectory[key] = np.asarray(trajectory[key])
-	trajectory["terminated"] = terminated
-	trajectory["truncated"] = truncated
-	return trajectory
+	return _finalize_trajectory(trajectory, terminated, truncated)

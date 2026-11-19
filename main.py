@@ -53,7 +53,7 @@ n_sensor_clusters = args.n_sensor_clusters
 print(f"CBF CONNECTIVITY NEIGHBOR MODE: {cbf_connectivity_neighbor_mode}")
 print(f"SENSOR INIT MODE: {sensor_init_mode} (clusters={n_sensor_clusters})")
 print(f"ENV SIZE: n_uavs={n_uavs}, n_sensors={n_sensors}")
-print(f"CHAIN CONFIG: n_chains={n_chains}")
+print(f"CHAIN CONFIG: n_chains={n_chains}, chain_depth={args.chain_depth}")
 
 # Build the UAV swarm environment with specified parameters.
 env = se.UAVSwarmEnv3D(
@@ -64,7 +64,7 @@ env = se.UAVSwarmEnv3D(
     min_uav_height=2.0,
     com_params={
         "u2u_range": 10.0,
-        "u2u_safe_dist": 2.0,
+        "u2u_safe_dist": 0.5,
         "u2s_range": 5.0,
         "u2b_range": 20.0,
         "u2s_visibility_range": 100.0,
@@ -96,10 +96,19 @@ env = se.UAVSwarmEnv3D(
     sensor_init_mode=sensor_init_mode,
     n_sensor_clusters=n_sensor_clusters,
     n_chains=n_chains,
+    chain_depth=args.chain_depth,
     connectivity_update_freq=10,
 )
 env.cbf_connectivity_neighbor_mode = cbf_connectivity_neighbor_mode
-env.set_head_motion(args.head_motion, n_head_clusters=args.head_n_clusters)
+env.set_sensor_clustering(
+    args.sensor_cluster_metric,
+    reach_margin=args.sensor_reach_margin,
+    polar_use_reach_mask=not args.no_reach_mask,
+)
+env.set_head_motion(
+    args.head_motion, n_head_clusters=args.head_n_clusters, head_replan_period=args.head_replan_period,
+    head_min_speed=args.head_min_speed, head_slow_radius=args.head_slow_radius,
+)
 
 # Build the MAPPO trainer and initialize the environment.
 trainer, initial_obs = build_trainer(
@@ -110,34 +119,40 @@ trainer, initial_obs = build_trainer(
     direction_head_temperature=direction_head_temperature,
     use_mean_direction=use_mean_direction,
 )
-if run_mode == "sim":
-    print("Simulating the swarm...")
+if run_mode in ("sim", "heuristic"):
+    is_heuristic = run_mode == "heuristic"
+    print("Simulating the swarm with the nearest-sensor heuristic..." if is_heuristic else "Simulating the swarm...")
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     dt_tag = format_float_tag(env.dt)
     sensor_potential_coeff = format_float_tag(env.potential_diff_coeff[1])
     rollout_dir = Path("rollout_visualizations") / (
-        f"sim_ns_{env.n_sensors}_nu_{env.n_uavs}_dt_{dt_tag}_sp_{sensor_potential_coeff}"
+        f"{'heur' if is_heuristic else 'sim'}_ns_{env.n_sensors}_nu_{env.n_uavs}_dt_{dt_tag}_sp_{sensor_potential_coeff}"
         f"_hm_{args.head_motion}_{run_stamp}"
     )
     rollout_dir.mkdir(parents=True, exist_ok=True)
 
-    if eval_checkpoint_path:
-        model_path = Path(eval_checkpoint_path)
-        if not model_path.exists():
-            raise FileNotFoundError(f"Trained model not found: {model_path}")
-        print(f"Simulating the swarm with trained follower model: {model_path}")
+    if is_heuristic:
+        rollout_trajectory = se.simulate_heuristic(
+            env, connectivity_update_freq=args.heuristic_connectivity_freq
+        )
     else:
-        model_path = rollout_dir / "random_follower_model.pt"
-        random_actor = fa.Actor(sensor_feature_dim=7, upstream_feature_dim=14)
-        torch.save({"follower_actor_state_dict": random_actor.state_dict()}, model_path)
-        print("No checkpoint given (-ec); using a randomly initialized follower model.")
+        if eval_checkpoint_path:
+            model_path = Path(eval_checkpoint_path)
+            if not model_path.exists():
+                raise FileNotFoundError(f"Trained model not found: {model_path}")
+            print(f"Simulating the swarm with trained follower model: {model_path}")
+        else:
+            model_path = rollout_dir / "random_follower_model.pt"
+            random_actor = fa.Actor(sensor_feature_dim=7, upstream_feature_dim=14)
+            torch.save({"follower_actor_state_dict": random_actor.state_dict()}, model_path)
+            print("No checkpoint given (-ec); using a randomly initialized follower model.")
 
-    rollout_trajectory = se.simulate(
-        env,
-        str(model_path),
-        use_mean_direction=use_mean_direction,
-        direction_temperature=direction_head_temperature,
-    )
+        rollout_trajectory = se.simulate(
+            env,
+            str(model_path),
+            use_mean_direction=use_mean_direction,
+            direction_temperature=direction_head_temperature,
+        )
     print(
         f"Simulated {len(rollout_trajectory['reward_per_step'])} steps "
         f"(terminated={rollout_trajectory['terminated']}, truncated={rollout_trajectory['truncated']})"

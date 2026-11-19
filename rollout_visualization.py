@@ -266,6 +266,21 @@ def _ellipse_shadow_xy(
     return np.stack([rx + center_x, ry + center_y], axis=-1)
 
 
+def _drone_segments(center, size, n_arc=8):
+    """Quadcopter glyph (X frame + 4 rotor rings) as 3D line segments centred at `center`."""
+    cx, cy, cz = (float(c) for c in center)
+    arm = size
+    rotor_r = 0.45 * size
+    segs = []
+    for sx, sy in ((1, 1), (-1, 1), (-1, -1), (1, -1)):
+        tip = np.array([cx + sx * arm, cy + sy * arm, cz])
+        segs.append([[cx, cy, cz], tip.tolist()])
+        ang = np.linspace(0.0, 2.0 * np.pi, n_arc + 1)
+        ring = np.column_stack([tip[0] + rotor_r * np.cos(ang), tip[1] + rotor_r * np.sin(ang), np.full_like(ang, cz)])
+        segs.extend([ring[k:k + 2].tolist() for k in range(n_arc)])
+    return segs
+
+
 def visualize_rollout_trajectory_3d(
     rollout_trajectory: Dict[str, Any],
     frame_idx: int = -1,
@@ -334,16 +349,16 @@ def visualize_rollout_trajectory_3d(
     if np.any(unvisited):
         ax.scatter(
             sensor_locs[unvisited, 0], sensor_locs[unvisited, 1], sensor_locs[unvisited, 2],
-            marker="^", s=55, c="#C62828", alpha=0.9, label="Unvisited Sensors"
+            marker="o", s=45, c="#C62828", alpha=0.9, label="Unvisited Sensors"
         )
     if np.any(sensor_visited):
         ax.scatter(
             sensor_locs[sensor_visited, 0], sensor_locs[sensor_visited, 1], sensor_locs[sensor_visited, 2],
-            marker="^", s=60, c="#2E7D32", alpha=0.95, label="Visited Sensors"
+            marker="o", s=50, c="#2E7D32", alpha=0.95, label="Visited Sensors"
         )
     ax.scatter(
         [base_station[0]], [base_station[1]], [base_station[2]],
-        marker="*", s=220, c="#B71C1C", edgecolors="black", linewidths=0.7, label="Base Station"
+        marker="^", s=170, c="#D500F9", edgecolors="black", linewidths=0.9, label="Base Station"
     )
 
     norm = plt.Normalize(vmin=float(times.min()), vmax=float(times.max()) if float(times.max()) > float(times.min()) else float(times.min()) + 1.0)
@@ -357,41 +372,21 @@ def visualize_rollout_trajectory_3d(
         speed_start_norm = float(np.clip(speed_start / speed_max, 0.0, 1.0))
         speed_end_norm = float(np.clip(speed_end / speed_max, 0.0, 1.0))
         if path.shape[0] >= 2:
-            points = path.reshape(-1, 1, 3)
-            segs = np.concatenate([points[:-1], points[1:]], axis=1)
-            cmap = plt.get_cmap("Reds") if is_head else plt.get_cmap(cmaps[uav_id % len(cmaps)])
-            seg_colors = cmap(norm(times[:-1]))
-            seg_colors[:, 3] = _segment_alpha_ramp(
-                segs.shape[0],
-                alpha_min=0.12 if is_head else 0.06,
-                alpha_max=0.98 if is_head else 0.90,
-            )
-            line = Line3DCollection(segs, colors=seg_colors, linewidths=3.4 if is_head else 2.4)
-            ax.add_collection3d(line)
+            cmap = (lambda _v: (0.0, 0.0, 0.0, 1.0)) if is_head else plt.get_cmap(cmaps[uav_id % len(cmaps)])
 
-            # Overlay a brighter recent trace ending at resolved_frame_idx.
+            # Only a short jet behind the UAV at the shown frame; no full-path trace.
             trace_end = min(resolved_frame_idx + 1, path.shape[0])
             trace_start = max(0, trace_end - recent_trace_steps)
-            recent_path = path[trace_start:trace_end, :]
-            if recent_path.shape[0] >= 2:
-                # Wide low-alpha underlay creates a motion-glow effect near the latest positions.
-                ax.plot(
-                    recent_path[:, 0],
-                    recent_path[:, 1],
-                    recent_path[:, 2],
-                    color=cmap(0.92),
-                    linewidth=8.0 if is_head else 5.8,
-                    alpha=0.13 if is_head else 0.10,
-                    linestyle="-",
+            jet_path = path[trace_start:trace_end, :]
+            if jet_path.shape[0] >= 2:
+                jet_points = jet_path.reshape(-1, 1, 3)
+                jet_segs = np.concatenate([jet_points[:-1], jet_points[1:]], axis=1)
+                jet_colors = np.tile(np.asarray(cmap(0.85), dtype=float), (jet_segs.shape[0], 1))
+                jet_colors[:, 3] = _segment_alpha_ramp(
+                    jet_segs.shape[0], alpha_min=0.0, alpha_max=0.95 if is_head else 0.85
                 )
-                ax.plot(
-                    recent_path[:, 0],
-                    recent_path[:, 1],
-                    recent_path[:, 2],
-                    color=cmap(0.95),
-                    linewidth=4.2 if is_head else 3.0,
-                    alpha=0.98 if is_head else 0.94,
-                    linestyle="-",
+                ax.add_collection3d(
+                    Line3DCollection(jet_segs, colors=jet_colors, linewidths=3.4 if is_head else 2.4)
                 )
 
             legend_label = "Head UAV" if is_head else f"Follower UAV {uav_id}"
@@ -404,12 +399,11 @@ def visualize_rollout_trajectory_3d(
             edgecolors="#C62828" if is_head else "black",
             linewidths=1.0 if is_head else 0.7,
         )
-        ax.scatter(
-            [path[-1, 0]], [path[-1, 1]], [path[-1, 2]],
-            s=(76 + 26 * speed_end_norm) if is_head else (52 + 18 * speed_end_norm),
-            c="#B71C1C" if is_head else "black",
-            edgecolors="white", linewidths=0.8 if is_head else 0.6,
-        )
+        drone_size = 0.012 * float(np.max(space_max[:2] - space_min[:2]))
+        ax.add_collection3d(Line3DCollection(
+            _drone_segments(path[min(resolved_frame_idx, path.shape[0] - 1)], drone_size),
+            colors=[cmap(0.9) if path.shape[0] >= 2 else "black"], linewidths=2.0 if is_head else 1.5,
+        ))
 
     # Realism: shadow footprints and altitude stems at the selected frame.
     z_ground = float(space_min[2])
@@ -986,11 +980,11 @@ def animate_rollout_trajectory_3d(
 
     ax.scatter(
         [base_station[0]], [base_station[1]], [base_station[2]],
-        marker="*", s=220, c="#B71C1C", edgecolors="black", linewidths=0.7, label="Base Station"
+        marker="^", s=170, c="#D500F9", edgecolors="black", linewidths=0.9, label="Base"
     )
     sensor_scatter = ax.scatter(
         sensor_locs[:, 0], sensor_locs[:, 1], sensor_locs[:, 2],
-        marker="^", s=45, c="#C62828", alpha=0.9, label="Sensors"
+        marker="o", s=40, c="#C62828", alpha=0.9, label="Sensors"
     )
 
     trail_collections = []
@@ -1001,9 +995,9 @@ def animate_rollout_trajectory_3d(
     cmaps = ["Blues", "Oranges", "Greens", "Purples", "Reds", "Greys"]
     for uav_id in range(n_uavs):
         is_head = (uav_id == head_uav_idx)
-        cmap = plt.get_cmap("Reds") if is_head else plt.get_cmap(cmaps[uav_id % len(cmaps)])
+        cmap = (lambda _v: (0.0, 0.0, 0.0, 1.0)) if is_head else plt.get_cmap(cmaps[uav_id % len(cmaps)])
         color = cmap(0.8)
-        label = "Head UAV" if is_head else f"Follower UAV {uav_id}"
+        label = "Head" if is_head else f"F{uav_id}"
 
         # Add a legend handle while rendering trajectory as per-segment collection.
         ax.plot([], [], [], color=color, linewidth=3.2 if is_head else 2.2, alpha=0.9, label=label)
@@ -1023,7 +1017,8 @@ def animate_rollout_trajectory_3d(
             alpha=0.0,
         )
 
-        marker, = ax.plot([], [], [], marker="o", linestyle="None", markersize=7 if is_head else 5, color=color)
+        marker = Line3DCollection([[p0, p0]], colors=[color], linewidths=2.4 if is_head else 1.8)
+        ax.add_collection3d(marker)
         seed_poly = np.array([[0.0, 0.0, float(space_min[2])]] * 3, dtype=float)
         shadow_poly = Poly3DCollection(
             [seed_poly],
@@ -1050,14 +1045,27 @@ def animate_rollout_trajectory_3d(
 
     ax.set_xlim(space_min[0], space_max[0])
     ax.set_ylim(space_min[1], space_max[1])
-    ax.set_zlim(space_min[2], space_max[2])
+    # Fit the vertical axis to the altitudes actually flown (fixed over the whole animation) and give it a
+    # sizeable share of the box height, so UAVs visibly fly above the ground instead of hugging it.
+    z_top = max(float(np.max(uav_locs[..., 2])), float(np.max(sensor_locs[:, 2])), float(base_station[2]))
+    z_lo = float(space_min[2])
+    z_hi = min(float(space_max[2]), z_lo + max(1.5 * (z_top - z_lo), 1.0))
+    ax.set_zlim(z_lo, z_hi)
     span = np.maximum(space_max - space_min, 1e-6)
-    ax.set_box_aspect((span[0], span[1], span[2]))
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
+    ax.set_box_aspect((span[0], span[1], 0.3 * float(max(span[0], span[1]))), zoom=1.1)
+    fig.subplots_adjust(left=0.0, right=1.0, top=0.97, bottom=0.07)
+    ax.set_xlabel("X", fontsize=13)
+    ax.set_ylabel("Y", fontsize=13)
+    ax.set_zlabel("Z", fontsize=13)
+    ax.tick_params(axis="both", labelsize=13)
+    ax.tick_params(axis="z", labelsize=13)
     ax.grid(True, alpha=0.3)
-    ax.legend(loc="upper left")
+    # Figure-level legend hugging the bottom edge: the flattened 3D box leaves empty axes space above/below the arena.
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(
+        handles, labels, loc="lower center", ncol=len(labels), fontsize=11, frameon=True,
+        columnspacing=1.0, handlelength=1.4, handletextpad=0.4, borderpad=0.3, bbox_to_anchor=(0.5, 0.01),
+    )
 
     frame_stride = max(1, int(frame_stride))
     frame_indices = list(range(0, t_steps, frame_stride))
@@ -1084,16 +1092,15 @@ def animate_rollout_trajectory_3d(
             sensor_scatter.set_color(sensor_colors)
 
         for uav_id in range(n_uavs):
-            path = uav_locs[: t_idx + 1, uav_id, :]
+            # Short jet behind the UAV: only the last `recent_window` steps, fading to fully transparent.
+            path = uav_locs[max(0, t_idx - recent_window) : t_idx + 1, uav_id, :]
             trail_collection, cmap, is_head = trail_collections[uav_id]
             if path.shape[0] >= 2:
                 points = path.reshape(-1, 1, 3)
                 segs = np.concatenate([points[:-1], points[1:]], axis=1)
-                seg_colors = cmap(norm(times[:t_idx]))
+                seg_colors = np.tile(np.asarray(cmap(0.85), dtype=float), (segs.shape[0], 1))
                 seg_colors[:, 3] = _segment_alpha_ramp(
-                    segs.shape[0],
-                    alpha_min=0.12 if is_head else 0.06,
-                    alpha_max=0.98 if is_head else 0.90,
+                    segs.shape[0], alpha_min=0.0, alpha_max=0.95 if is_head else 0.85
                 )
                 trail_collection.set_segments(segs)
                 trail_collection.set_color(seg_colors)
@@ -1101,22 +1108,8 @@ def animate_rollout_trajectory_3d(
                 trail_collection.set_segments([])
 
             cur = uav_locs[t_idx, uav_id, :]
-            marker_points[uav_id].set_data([cur[0]], [cur[1]])
-            marker_points[uav_id].set_3d_properties([cur[2]])
             speed_norm = float(np.clip(speeds[t_idx, uav_id] / speed_max, 0.0, 1.0))
-            marker_points[uav_id].set_markersize((7.0 + 2.0 * speed_norm) if is_head else (5.0 + 1.8 * speed_norm))
-
-            # Motion glow around most recent segment window.
-            glow_start = max(0, t_idx - recent_window)
-            glow_path = uav_locs[glow_start : t_idx + 1, uav_id, :]
-            if glow_path.shape[0] >= 2:
-                glow_lines[uav_id].set_data(glow_path[:, 0], glow_path[:, 1])
-                glow_lines[uav_id].set_3d_properties(glow_path[:, 2])
-                glow_lines[uav_id].set_alpha(0.16 if is_head else 0.12)
-            else:
-                glow_lines[uav_id].set_data([], [])
-                glow_lines[uav_id].set_3d_properties([])
-                glow_lines[uav_id].set_alpha(0.0)
+            marker_points[uav_id].set_segments(_drone_segments(cur, 0.012 * float(np.max(space_max[:2] - space_min[:2]))))
 
             # Shadow footprint and altitude stem.
             z_ground = float(space_min[2])
@@ -1164,9 +1157,12 @@ def animate_rollout_trajectory_3d(
                 line.set_visible(False)
 
         title = f"UAV Rollout Animation (frame={t_idx}/{t_steps - 1}, time={times[t_idx]:.2f})"
-        if visited_fraction is not None and visited_fraction.shape[0] == t_steps:
-            title += f" | visited fraction={visited_fraction[t_idx]:.3f}"
-        ax.set_title(title)
+        n_sensors_total = sensor_locs.shape[0]
+        if visited_mask is not None and visited_mask.ndim == 2 and visited_mask.shape[0] == t_steps:
+            title += f" | visited sensors={int(visited_mask[t_idx].sum())}/{n_sensors_total}"
+        elif visited_fraction is not None and visited_fraction.shape[0] == t_steps:
+            title += f" | visited sensors={int(round(visited_fraction[t_idx] * n_sensors_total))}/{n_sensors_total}"
+        ax.set_title(title, fontsize=15)
 
         return [c[0] for c in trail_collections] + glow_lines + marker_points + shadow_polys + altitude_stems + list(pair_lines.values()) + [sensor_scatter]
 
